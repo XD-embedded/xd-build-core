@@ -1,2 +1,3 @@
 [layer]
 priority=0
+commands=xd.build.core.cmd
