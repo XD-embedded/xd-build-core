@@ -51,3 +51,15 @@ class ManifestTestCase(unittest.case.TestCase):
     def tearDown(self):
         os.chdir(self.restore['cwd'])
         shutil.rmtree(self.testdir, ignore_errors=True)
+
+class TestCase(unittest.case.TestCase):
+
+    def setUp(self):
+        self.restore = {}
+        self.restore['cwd'] = os.getcwd()
+        self.testdir = tempfile.mkdtemp(prefix='unittest-')
+        os.chdir(self.testdir)
+
+    def tearDown(self):
+        os.chdir(self.restore['cwd'])
+        shutil.rmtree(self.testdir, ignore_errors=True)

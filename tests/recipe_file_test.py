@@ -1,6 +1,8 @@
 from xd.build.core.recipe_file import *
 
+from case import *
 import unittest
+import io
 
 class tests(unittest.case.TestCase):
 
@@ -98,3 +100,23 @@ class tests(unittest.case.TestCase):
         recipe_file_a = RecipeFile('/tmp/foo_1.89.xd')
         recipe_file_b = '/tmp/foo_1.89.xd'
         self.assertNotEqual(recipe_file_a, recipe_file_b)
+
+
+class parse_tests(TestCase):
+
+    def test_parse_1(self):
+        with open('foobar.xd', 'w') as f:
+            f.write('FOO="foo"\n')
+        recipe_file = RecipeFile('foobar.xd')
+        d = recipe_file.parse()
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), 'foo')
+
+    def test_dump_1(self):
+        with open('foobar.xd', 'w') as f:
+            f.write('FOO="foo"\n')
+        recipe_file = RecipeFile('foobar.xd')
+        recipe_file.parse()
+        stream = io.StringIO()
+        recipe_file.dump(stream=stream)
+        self.assertRegex("FOO='foo'\n", stream.getvalue())
