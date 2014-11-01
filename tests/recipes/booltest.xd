@@ -1,0 +1,7 @@
+I = Bool()
+I = X or Y
+X = True
+Y = False
+
+A = Bool(True)
+B = Bool(False)
