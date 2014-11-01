@@ -38,6 +38,19 @@ class Parser(object):
                 if type(statement.value) in (
                         ast.Str, ast.Num, ast.NameConstant):
                     self.backlog.body.append(statement)
+                elif (isinstance(statement.value, ast.BinOp) and
+                      isinstance(statement.value.left, ast.Str) and
+                      isinstance(statement.value.op, ast.Mod)):
+                    str_statement = ast.Call()
+                    str_statement.func = ast.Name()
+                    str_statement.func.ctx = ast.Load()
+                    str_statement.func.id = 'String'
+                    str_statement.args = [
+                        expression_store.store(statement.value)]
+                    str_statement.keywords = []
+                    ast.fix_missing_locations(str_statement)
+                    statement.value = str_statement
+                    self.backlog.body.append(statement)
                 elif (isinstance(statement.value, ast.Call) and
                       hasattr(statement.value.func, 'id') and
                       statement.value.func.id in (

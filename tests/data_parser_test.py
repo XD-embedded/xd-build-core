@@ -259,3 +259,15 @@ FOOBAR=Float(FOO+BAR)
         self.assertEqual(d['FOO'].get(), 3.14)
         self.assertEqual(d['BAR'].get(), 22.7)
         self.assertEqual(d['FOOBAR'].get(), 25.84)
+
+    def test_str_mod(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO='foo'
+BAR='bar'
+FOOBAR="%s and %s"%(FOO, BAR)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 'foo')
+        self.assertEqual(d['BAR'].get(), 'bar')
+        self.assertEqual(d['FOOBAR'].get(), 'foo and bar')
