@@ -9,3 +9,5 @@ install:
 script: "nosetests"
 after_success:
   - coveralls
+notifications:
+  irc: "chat.freenode.net#xd-embedded"

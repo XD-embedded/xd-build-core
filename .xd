@@ -1,3 +1,5 @@
 [layer]
 priority=0
 commands=xd.build.core.cmd
+[build]
+recipes=tests/recipes/*.xd

@@ -3,8 +3,10 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-from xd.build.core.recipe_version import *
+from .recipe_version import *
+from .data.parser import *
 import os
+import sys
 
 
 __all__ = ['RecipeFile', 'InvalidRecipeName', 'InvalidRecipeFilename']
@@ -79,3 +81,20 @@ class RecipeFile(object):
         if os.path.realpath(self.path) != os.path.realpath(other.path):
             return False
         return True
+
+    def parse(self):
+        """Parse recipe file."""
+        parser = Parser()
+        self.data = parser.parse(self.path)
+        return self.data
+
+    def dump(self, stream=None):
+        """Print entire recipe specification.
+
+        Arguments:
+        stream -- output stream (default: sys.stdout)
+        """
+        if stream is None:
+            stream = sys.stdout
+        for name, value in sorted(self.data.items()):
+            print("%s=%r"%(name, value.get()), file=stream)

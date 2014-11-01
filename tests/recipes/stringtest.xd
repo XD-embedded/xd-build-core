@@ -1,0 +1,24 @@
+FOOBAR = String()
+FOOBAR = FOO + BAR
+FOO = "foo"
+BAR = 'bar'
+FOO.append('x')
+BAR.prepend('y')
+
+MOO = String('one=%s two=%s'%(FOO, BAR))
+MOO.prepend('-before-')
+MOO.append('-after-')
+
+BOO = String()
+BOO = FOO + ' and ' + BAR
+
+LOGIC = String()
+LOGIC = FOO or BAR
+
+NUMBERS = String()
+NUMBERS = str(42) + ' and ' + '%2.8f'%(3.1459)
+
+FB = String(FOO)
+FB.append(BAR)
+
+F = String('foo')
