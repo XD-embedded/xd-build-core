@@ -23,7 +23,11 @@ class Variable(object):
         self.set_ifs = []
 
     def __str__(self):
-        return str(self.get())
+        value = self.get()
+        if value is None:
+            return ''
+        else:
+            return str(value)
 
     def set(self, value):
         if isinstance(value, Variable):

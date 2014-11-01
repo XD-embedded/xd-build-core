@@ -26,8 +26,7 @@ class tests(unittest.case.TestCase):
 
     def test_str_3(self):
         s = String()
-        with self.assertRaises(TypeError):
-            str(s)
+        self.assertEqual(str(s), '')
 
     def test_set_get(self):
         s = String('foo')

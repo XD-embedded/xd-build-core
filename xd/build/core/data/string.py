@@ -17,7 +17,7 @@ class String(Sequence):
     empty = ''
 
     def __str__(self):
-        return self.get()
+        return self.get() or self.empty
 
     def count(self, sub, start=None, end=None):
         return self.get().count(sub, start, end)
