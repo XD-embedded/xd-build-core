@@ -43,9 +43,9 @@ class ManifestTestCase(unittest.case.TestCase):
             self.testdir, [XdEmbeddedLayer(self.layerdir, 0)])
         os.mkdir('recipes')
         with open(os.path.join('recipes', 'foo_1.0.xd'), 'w') as f:
-            f.write('FOO = "bar"\n')
+            f.write('FOO = "foo"\n')
         with open(os.path.join('recipes', 'bar.xd'), 'w') as f:
-            f.write('FOO = "bar"\n')
+            f.write('BAR = "bar"\n')
         os.chdir(self.testdir)
 
     def tearDown(self):
