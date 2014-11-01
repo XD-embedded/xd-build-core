@@ -211,3 +211,51 @@ FOO+='bar'
             f.write('# this is a comment line\n')
         d = self.parser.parse('recipe.xd')
         self.assertEqual(len(d), 0)
+
+    def test_parse_bool(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=True
+BAR=False
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['FOO'].get(), True)
+        self.assertEqual(d['BAR'].get(), False)
+
+    def test_parse_int_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('FOO=42\n')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), 42)
+
+    def test_parse_int_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=42
+BAR=43
+FOOBAR=Int(FOO+BAR)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 42)
+        self.assertEqual(d['BAR'].get(), 43)
+        self.assertEqual(d['FOOBAR'].get(), 85)
+
+    def test_parse_float_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('FOO=3.14\n')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), 3.14)
+
+    def test_parse_float_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=3.14
+BAR=22.7
+FOOBAR=Float(FOO+BAR)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 3.14)
+        self.assertEqual(d['BAR'].get(), 22.7)
+        self.assertEqual(d['FOOBAR'].get(), 25.84)

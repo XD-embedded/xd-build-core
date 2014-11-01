@@ -1,6 +1,7 @@
 from xd.build.core.data.namespace import *
 from xd.build.core.data.expr import Expression
 from xd.build.core.data.string import String
+from xd.build.core.data.num import *
 
 import unittest
 
@@ -30,6 +31,18 @@ class tests(unittest.case.TestCase):
         self.assertEqual(self.ns['FOO'].get(), 'hello world')
         self.assertEqual(self.ns['BAR'].get(), 'hello world')
 
+    def test_set_get_bool(self):
+        self.ns['FOO'] = True
+        self.assertEqual(self.ns['FOO'].get(), True)
+
+    def test_set_get_int(self):
+        self.ns['FOO'] = 42
+        self.assertEqual(self.ns['FOO'].get(), 42)
+
+    def test_set_get_float(self):
+        self.ns['FOO'] = 3.14
+        self.assertEqual(self.ns['FOO'].get(), 3.14)
+
     def test_set_bad_type(self):
         self.ns['FOO'] = 'foo'
         with self.assertRaises(TypeError):
@@ -38,6 +51,13 @@ class tests(unittest.case.TestCase):
     def test_get_keyerror(self):
         with self.assertRaises(KeyError):
             self.ns['FOO']
+
+    def test_get_typeerror(self):
+        self.ns['FOO'] = String()
+        self.ns['I'] = 42
+        self.ns['FOO'] = Expression('I')
+        with self.assertRaises(TypeError):
+            self.ns['FOO'].get()
 
     def test_del(self):
         self.ns['FOO'] = 'foo'
@@ -97,12 +117,12 @@ class tests(unittest.case.TestCase):
         self.ns['FOO'].append(Expression('BAR'))
         self.assertEqual(self.ns['FOO'].get(), 'bar')
 
-    #def test_append_expr_typeerror(self):
-    #    self.ns['FOO'] = String()
-    #    self.ns['BAR'] = 42
-    #    self.ns['FOO'].append(Expression('BAR'))
-    #    with self.assertRaises(TypeError):
-    #        self.ns['FOO'].get()
+    def test_append_expr_typeerror(self):
+        self.ns['FOO'] = String()
+        self.ns['BAR'] = 42
+        self.ns['FOO'].append(Expression('BAR'))
+        with self.assertRaises(TypeError):
+            self.ns['FOO'].get()
 
     def test_prepend_variable(self):
         self.ns['FOO'] = 'foo'
@@ -128,12 +148,12 @@ class tests(unittest.case.TestCase):
         self.ns['FOO'].prepend(Expression('BAR'))
         self.assertEqual(self.ns['FOO'].get(), 'bar')
 
-    #def test_prepend_expr_typeerror(self):
-    #    self.ns['FOO'] = String()
-    #    self.ns['BAR'] = 42
-    #    self.ns['FOO'].prepend(Expression('BAR'))
-    #    with self.assertRaises(TypeError):
-    #        self.ns['FOO'].get()
+    def test_prepend_expr_typeerror(self):
+        self.ns['FOO'] = String()
+        self.ns['BAR'] = 42
+        self.ns['FOO'].prepend(Expression('BAR'))
+        with self.assertRaises(TypeError):
+            self.ns['FOO'].get()
 
     def test_multibinding(self):
         FOO = self.ns['FOO'] = 'foo'
@@ -209,6 +229,20 @@ class tests(unittest.case.TestCase):
         self.ns['FOOBAR'].set_if(Expression('BAR'), self.ns['FOO'])
         self.assertEqual(self.ns['FOOBAR'].get(), 'foo')
 
+    def test_str_set_if_typeerror_1(self):
+        self.ns['FOOBAR'] = 'hello world'
+        self.ns['BAR'] = True
+        with self.assertRaises(TypeError):
+            self.ns['FOOBAR'].set_if(Expression('BAR'), 42)
+
+    def test_str_set_if_typeerror_2(self):
+        self.ns['FOOBAR'] = 'hello world'
+        self.ns['BAR'] = True
+        self.ns['FOO'] = 42
+        self.ns['FOOBAR'].set_if(Expression('BAR'), Expression('FOO'))
+        with self.assertRaises(TypeError):
+            self.ns['FOOBAR'].get()
+
     def test_str_append_if_1(self):
         self.ns['FOO'] = 'foo'
         self.ns['BAR'] = 'b'
@@ -271,6 +305,19 @@ class tests(unittest.case.TestCase):
         self.ns['FOO'].append_if(Expression('Z'), 'zzz')
         self.assertEqual(self.ns['FOO'].get(), 'fooxxxzzz')
 
+    def test_str_append_if_typeerror_1(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['b'] = True
+        with self.assertRaises(TypeError):
+            self.ns['FOO'].append_if(Expression('b'), 42)
+
+    def test_str_append_if_typeerror_2(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['I'] = 42
+        self.ns['FOO'].append_if(Expression('I'), Expression('I'))
+        with self.assertRaises(TypeError):
+            self.ns['FOO'].get()
+
     def test_str_prepend_if_1(self):
         self.ns['FOO'] = 'foo'
         self.ns['BAR'] = 'b'
@@ -332,3 +379,16 @@ class tests(unittest.case.TestCase):
         self.ns['FOO'].prepend_if(Expression('Y'), 'yyy')
         self.ns['FOO'].prepend_if(Expression('Z'), 'zzz')
         self.assertEqual(self.ns['FOO'].get(), 'zzzxxxfoo')
+
+    def test_str_prepend_if_typeerror_1(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['b'] = True
+        with self.assertRaises(TypeError):
+            self.ns['FOO'].prepend_if(Expression('b'), 42)
+
+    def test_str_prepend_if_typeerror_2(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['I'] = 42
+        self.ns['FOO'].prepend_if(Expression('I'), Expression('I'))
+        with self.assertRaises(TypeError):
+            self.ns['FOO'].get()
