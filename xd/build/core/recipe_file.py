@@ -88,11 +88,13 @@ class RecipeFile(object):
         self.data = parser.parse(self.path)
         return self.data
 
-    def dump(self, stream=sys.stdout):
+    def dump(self, stream=None):
         """Print entire recipe specification.
 
         Arguments:
         stream -- output stream (default: sys.stdout)
         """
+        if stream is None:
+            stream = sys.stdout
         for name, value in sorted(self.data.items()):
             print("%s=%r"%(name, value.get()), file=stream)
