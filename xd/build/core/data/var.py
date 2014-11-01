@@ -13,13 +13,14 @@ __all__ = ['Variable']
 
 class Variable(object):
 
-    __slots__ = ['scope', 'name', 'value']
+    __slots__ = ['scope', 'name', 'value', 'set_ifs']
 
     def __init__(self, value=None):
         if isinstance(value, Variable):
             value = value.expression()
         assert self.isvalid(value)
         self.value = value
+        self.set_ifs = []
 
     def __str__(self):
         return str(self.get())
@@ -42,9 +43,39 @@ class Variable(object):
                 type(self).__name__, self.name or '<>', type(value).__name__))
         if hasattr(self, 'amend'):
             value = self.amend(value)
-        # TODO: override_if handling
-        # TODO: amend_if handling
+        value = self.override(value)
+        if hasattr(self, 'amend_if'):
+            value = self.amend_if(value)
         return value
+
+    def set_if(self, condition, value):
+        if isinstance(condition, Variable):
+            condition = condition.expression()
+        assert isinstance(condition, Expression)
+        if isinstance(value, Variable):
+            value = value.expression()
+        if not self.isvalid(value):
+            raise TypeError('cannot append %s to %s'%(type(value), type(self)))
+        self.set_ifs.append((condition, value))
+
+    def override(self, value):
+        for (condition, override_value) in reversed(self.set_ifs):
+            if self.condition_is_true(condition):
+                assert self.isvalid(override_value)
+                if isinstance(override_value, Expression):
+                    override_value = self.scope.eval(override_value)
+                if not isinstance(override_value, self.basetype):
+                    raise TypeError(
+                        "unsupported append operation: %s to %s"%(
+                            type(override_value), type(value)))
+                return override_value
+        return value
+
+    def condition_is_true(self, condition):
+        try:
+            return bool(self.scope.eval(condition))
+        except NameError:
+            return False
 
     def isvalid(self, value):
         return (value is None or

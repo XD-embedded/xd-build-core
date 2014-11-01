@@ -156,3 +156,179 @@ class tests(unittest.case.TestCase):
         self.ns['FOO'] = 'bar'
         self.assertEqual(self.ns['FOO'].get(), 'bar')
         self.assertEqual(self.ns['BAR'].get(), 'bar')
+
+    def test_str_set_if_1(self):
+        self.ns['FOOBAR'] = 'foo'
+        self.ns['BAR'] = 'b'
+        self.ns['FOOBAR'].set_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOOBAR'].get(), 'bar')
+
+    def test_str_set_if_2(self):
+        self.ns['FOOBAR'] = 'foo'
+        self.ns['BAR'] = ''
+        self.ns['FOOBAR'].set_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOOBAR'].get(), 'foo')
+
+    def test_str_set_if_3(self):
+        self.ns['FOOBAR'] = 'foo'
+        self.ns['BAR'] = String()
+        self.ns['FOOBAR'].set_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOOBAR'].get(), 'foo')
+
+    def test_str_set_if_4(self):
+        self.ns['FOOBAR'] = 'foo'
+        self.ns['FOOBAR'].set_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOOBAR'].get(), 'foo')
+
+    def test_str_set_if_5(self):
+        self.ns['FOOBAR'] = 'hello world'
+        self.ns['FOO'] = 'f'
+        self.ns['BAR'] = 'b'
+        self.ns['FOOBAR'].set_if(Expression('FOO'), 'foo')
+        self.ns['FOOBAR'].set_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOOBAR'].get(), 'bar')
+
+    def test_str_set_if_6(self):
+        self.ns['FOOBAR'] = 'hello world'
+        self.ns['FOO'] = 'f'
+        self.ns['BAR'] = 'b'
+        self.ns['FOOBAR'].set_if(Expression('BAR'), 'bar')
+        self.ns['FOOBAR'].set_if(Expression('FOO'), 'foo')
+        self.assertEqual(self.ns['FOOBAR'].get(), 'foo')
+
+    def test_str_set_if_7(self):
+        self.ns['FOOBAR'] = 'foo'
+        self.ns['BAR'] = 'b'
+        self.ns['FOOBAR'].set_if(self.ns['BAR'], 'bar')
+        self.assertEqual(self.ns['FOOBAR'].get(), 'bar')
+
+    def test_str_set_if_8(self):
+        self.ns['FOOBAR'] = 'hello world'
+        self.ns['BAR'] = 'bar'
+        self.ns['FOO'] = 'foo'
+        self.ns['FOOBAR'].set_if(Expression('BAR'), self.ns['FOO'])
+        self.assertEqual(self.ns['FOOBAR'].get(), 'foo')
+
+    def test_str_append_if_1(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = 'b'
+        self.ns['FOO'].append_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foobar')
+
+    def test_str_append_if_2(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = ''
+        self.ns['FOO'].append_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+
+    def test_str_append_if_3(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = String()
+        self.ns['FOO'].append_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+
+    def test_str_append_if_4(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['FOO'].append_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+
+    def test_str_append_if_5(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = 'b'
+        BAR = self.ns['BAR']
+        self.ns['FOO'].append_if(BAR, 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foobar')
+
+    def test_str_append_if_6(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = String()
+        BAR = self.ns['BAR']
+        self.ns['FOO'].append_if(BAR, 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+
+    def test_str_append_if_7(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['B'] = 'b'
+        self.ns['BAR'] = 'bar'
+        BAR = self.ns['BAR']
+        self.ns['FOO'].append_if(Expression('B'), BAR)
+        self.assertEqual(self.ns['FOO'].get(), 'foobar')
+
+    def test_str_append_if_8(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = 'bar'
+        BAR = self.ns['BAR']
+        self.ns['FOO'].append_if(Expression('B'), BAR)
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+
+    def test_str_append_if_9(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['X'] = 'x'
+        self.ns['Y'] = ''
+        self.ns['Z'] = 'z'
+        self.ns['FOO'].append_if(Expression('X'), 'xxx')
+        self.ns['FOO'].append_if(Expression('Y'), 'yyy')
+        self.ns['FOO'].append_if(Expression('Z'), 'zzz')
+        self.assertEqual(self.ns['FOO'].get(), 'fooxxxzzz')
+
+    def test_str_prepend_if_1(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = 'b'
+        self.ns['FOO'].prepend_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'barfoo')
+
+    def test_str_prepend_if_2(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = ''
+        self.ns['FOO'].prepend_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+
+    def test_str_prepend_if_3(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = String()
+        self.ns['FOO'].prepend_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+
+    def test_str_prepend_if_4(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['FOO'].prepend_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+
+    def test_str_prepend_if_5(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = 'b'
+        BAR = self.ns['BAR']
+        self.ns['FOO'].prepend_if(BAR, 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'barfoo')
+
+    def test_str_prepend_if_6(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = String()
+        BAR = self.ns['BAR']
+        self.ns['FOO'].prepend_if(BAR, 'bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+
+    def test_str_prepend_if_7(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['B'] = 'b'
+        self.ns['BAR'] = 'bar'
+        BAR = self.ns['BAR']
+        self.ns['FOO'].prepend_if(Expression('B'), BAR)
+        self.assertEqual(self.ns['FOO'].get(), 'barfoo')
+
+    def test_str_prepend_if_8(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['BAR'] = 'bar'
+        BAR = self.ns['BAR']
+        self.ns['FOO'].prepend_if(Expression('B'), BAR)
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+
+    def test_str_prepend_if_9(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['X'] = 'x'
+        self.ns['Y'] = ''
+        self.ns['Z'] = 'z'
+        self.ns['FOO'].prepend_if(Expression('X'), 'xxx')
+        self.ns['FOO'].prepend_if(Expression('Y'), 'yyy')
+        self.ns['FOO'].prepend_if(Expression('Z'), 'zzz')
+        self.assertEqual(self.ns['FOO'].get(), 'zzzxxxfoo')

@@ -44,6 +44,13 @@ class Parser(object):
                     statement.value = expression_store.store(statement.value)
                     self.backlog.body.append(statement)
             elif isinstance(statement, ast.Expr):
+                assert isinstance(statement.value, ast.Call)
+                statement.value.args = [
+                    expression_store.store(arg)
+                    for arg in statement.value.args]
+                for i in range(len(statement.value.keywords)):
+                    keyword = statement.value.keywords[i]
+                    keyword.value = expression_store.store(keyword.value)
                 self.backlog.body.append(statement)
             else:
                 raise SyntaxError('unsupported statement: %s'%(

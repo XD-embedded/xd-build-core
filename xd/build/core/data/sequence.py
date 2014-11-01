@@ -12,11 +12,13 @@ __all__ = ['Sequence']
 
 class Sequence(Variable):
 
-    __slots__ = ['prepends', 'appends']
+    __slots__ = ['prepends', 'appends', 'prepend_ifs', 'append_ifs']
 
     def __init__(self, value=None):
         self.prepends = []
         self.appends  = []
+        self.prepend_ifs = []
+        self.append_ifs  = []
         super(Sequence, self).__init__(value)
 
     def __getitem__(self, index):
@@ -47,7 +49,6 @@ class Sequence(Variable):
             value = value.expression()
         if not self.isvalid(value):
             raise TypeError('cannot prepend %s to %s'%(type(value), type(self)))
-        #self.cache.invalidate()
         self.prepends.append(value)
 
     def append(self, value):
@@ -55,7 +56,6 @@ class Sequence(Variable):
             value = value.expression()
         if not self.isvalid(value):
             raise TypeError('cannot append %s to %s'%(type(value), type(self)))
-        #self.cache.invalidate()
         self.appends.append(value)
 
     def amend_prepend(self, value, amend_value):
@@ -91,10 +91,37 @@ class Sequence(Variable):
         return value
 
     def amend(self, value):
-        if self.prepends:
-            for amend_value in self.prepends:
+        for amend_value in self.prepends:
+            value = self.amend_prepend(value, amend_value)
+        for amend_value in self.appends:
+            value = self.amend_append(value, amend_value)
+        return value
+
+    def prepend_if(self, condition, value):
+        if isinstance(condition, Variable):
+            condition = condition.expression()
+        assert isinstance(condition, Expression)
+        if isinstance(value, Variable):
+            value = value.expression()
+        if not self.isvalid(value):
+            raise TypeError('cannot prepend %s to %s'%(type(value), type(self)))
+        self.prepend_ifs.append((condition, value))
+
+    def append_if(self, condition, value):
+        if isinstance(condition, Variable):
+            condition = condition.expression()
+        assert isinstance(condition, Expression)
+        if isinstance(value, Variable):
+            value = value.expression()
+        if not self.isvalid(value):
+            raise TypeError('cannot append %s to %s'%(type(value), type(self)))
+        self.append_ifs.append((condition, value))
+
+    def amend_if(self, value):
+        for (condition, amend_value) in self.prepend_ifs:
+            if self.condition_is_true(condition):
                 value = self.amend_prepend(value, amend_value)
-        if self.appends:
-            for amend_value in self.appends:
+        for (condition, amend_value) in self.append_ifs:
+            if self.condition_is_true(condition):
                 value = self.amend_append(value, amend_value)
         return value
