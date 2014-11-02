@@ -21,24 +21,6 @@ class Sequence(Variable):
         self.append_ifs  = []
         super(Sequence, self).__init__(value)
 
-    def __getitem__(self, index):
-        return self.get().__getitem__(index)
-
-    def __len__(self):
-        return self.get().__len__()
-
-    def __contains__(self, item):
-        return self.get().__contains__(item)
-
-    def index(self, sub, start=0, end=None):
-        if end is None:
-            return self.get().index(sub, start)
-        else:
-            return self.get().index(sub, start, end)
-
-    def count(self, sub):
-        return self.get().count(sub)
-
     def set(self, value):
         super(Sequence, self).set(value)
         self.prepends = []
