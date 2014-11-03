@@ -31,10 +31,10 @@ class Variable(object):
     def get(self):
         value = self.eval(self.value)
         self.validate_value(value)
-        if hasattr(self, 'amend'):
+        if hasattr(self, 'amends'):
             value = self.amend(value)
         value = self.override(value)
-        if hasattr(self, 'amend_if'):
+        if hasattr(self, 'amend_ifs'):
             value = self.amend_if(value)
         return value
 
@@ -52,6 +52,26 @@ class Variable(object):
                 self.validate_value(value)
                 return value
         return value
+
+    def amend(self, value):
+        for amend_func, amend_value in self.amends:
+            value = self.amend_it(value, amend_func, amend_value)
+        return value
+
+    def amend_if(self, value):
+        for (condition, amend_func, amend_value) in self.amend_ifs:
+            if not self.eval_condition(condition):
+                continue
+            value = self.amend_it(value, amend_func, amend_value)
+        return value
+
+    def amend_it(self, value, amend_func, amend_value):
+        amend_value = self.eval(amend_value)
+        if amend_value is None:
+            return value
+        if value is None:
+            value = self.empty
+        return amend_func(value, amend_value)
 
     def validate_value(self, value):
         if not (value is None or type(value) in (self.basetype, Expression)):
