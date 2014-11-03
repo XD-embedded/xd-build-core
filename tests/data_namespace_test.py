@@ -1,6 +1,8 @@
 from xd.build.core.data.namespace import *
 from xd.build.core.data.expr import Expression
 from xd.build.core.data.string import String
+from xd.build.core.data.list import List
+from xd.build.core.data.dict import Dict
 from xd.build.core.data.num import *
 
 import unittest
@@ -520,3 +522,71 @@ class tests(unittest.case.TestCase):
         self.ns['L'].extend_if(Expression('BAR'), ['hello', 'world'])
         self.assertEqual(self.ns['L'].get(), ['foo', 'bar'])
 
+    def test_dict_update_if_1(self):
+        self.ns['D'] = {'foo': 42}
+        self.ns['BAR'] = True
+        self.ns['D'].update_if(Expression('BAR'), {'bar': 43})
+        self.assertEqual(self.ns['D'].get(), {'foo': 42, 'bar': 43})
+
+    def test_dict_update_if_2(self):
+        self.ns['D'] = {'foo': 42}
+        self.ns['BAR'] = False
+        self.ns['D'].update_if(Expression('BAR'), {'bar': 43})
+        self.assertEqual(self.ns['D'].get(), {'foo': 42})
+
+    def test_dict_update_if_3(self):
+        self.ns['D'] = {'foo': 42}
+        self.ns['D'].update_if(Expression('BAR'), {'bar': 43})
+        self.assertEqual(self.ns['D'].get(), {'foo': 42})
+
+    def test_dict_update_if_4(self):
+        self.ns['D'] = {'foo': 42}
+        self.ns['E'] = Dict()
+        self.ns['BAR'] = False
+        self.ns['D'].update_if(Expression('BAR'), Expression('E'))
+        self.assertEqual(self.ns['D'].get(), {'foo': 42})
+
+    def test_dict_item_1(self):
+        self.ns['D'] = {}
+        self.ns['D']['i'] = 42
+        self.assertIsInstance(self.ns['D']['i'], Int)
+        self.assertEqual(self.ns['D']['i'].get(), 42)
+
+    def test_dict_item_2(self):
+        self.ns['D'] = {}
+        self.ns['D']['i'] = 42
+        self.ns['D']['i'].set_if(Expression('FOO'), 43)
+        self.assertIsInstance(self.ns['D']['i'], Int)
+        self.assertEqual(self.ns['D']['i'].get(), 42)
+
+    def test_dict_item_3(self):
+        self.ns['D'] = {}
+        self.ns['D']['i'] = 42
+        self.ns['D']['i'].set_if(Expression('FOO'), 43)
+        self.ns['FOO'] = True
+        self.assertIsInstance(self.ns['D']['i'], Int)
+        self.assertEqual(self.ns['D']['i'].get(), 43)
+
+    def test_dict_item_4(self):
+        self.ns['D'] = {}
+        self.ns['D']['i'] = [42]
+        self.ns['D']['i'].append_if(Expression('FOO'), 43)
+        self.ns['FOO'] = True
+        self.assertIsInstance(self.ns['D']['i'], List)
+        self.assertEqual(self.ns['D']['i'].get(), [42, 43])
+
+    def test_dict_item_5(self):
+        self.ns['D'] = {}
+        self.ns['D']['i'] = {'foo': 42}
+        self.ns['D']['i'].update_if(Expression('FOO'), {'bar': 43})
+        self.ns['FOO'] = True
+        self.assertIsInstance(self.ns['D']['i'], Dict)
+        self.assertEqual(self.ns['D']['i'].get(), {'foo': 42, 'bar': 43})
+
+    def test_dict_item_6(self):
+        self.ns['D'] = {}
+        self.ns['D']['i'] = {'foo': 42}
+        self.ns['D']['i'].update_if(Expression('FOO'), {'foo': 43})
+        self.ns['FOO'] = True
+        self.assertIsInstance(self.ns['D']['i'], Dict)
+        self.assertEqual(self.ns['D']['i'].get(), {'foo': 43})

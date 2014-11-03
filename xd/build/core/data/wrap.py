@@ -17,6 +17,8 @@ def wrap(var):
         var = Float(var)
     elif isinstance(var, list):
         var = List(var)
+    elif isinstance(var, dict):
+        var = Dict(var)
     return var
 
 
@@ -24,3 +26,4 @@ from .var import *
 from .string import *
 from .num import *
 from .list import *
+from .dict import *

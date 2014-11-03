@@ -355,3 +355,161 @@ libdir = '{0}/lib'.format(prefix)
         self.assertEqual(len(d), 2)
         self.assertEqual(d['prefix'].get(), '/usr')
         self.assertEqual(d['libdir'].get(), '/usr/lib')
+
+    def test_dict_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write("FOO={'foo': 42}\n")
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), {'foo': 42})
+
+    def test_dict_update_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO={'foo': 42}
+FOO.update({'bar': 43})
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), {'foo': 42, 'bar': 43})
+
+    def test_dict_update_if_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO={'foo': 42}
+FOO.update_if(BAR, {'bar': 43})
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), {'foo': 42})
+
+    def test_dict_update_if_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO={'foo': 42}
+FOO.update_if(BAR, {'bar': 43})
+BAR=True
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['FOO'].get(), {'foo': 42, 'bar': 43})
+        self.assertEqual(d['BAR'].get(), True)
+
+    def test_dict_setitem_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO={}
+FOO['bar'] = 43
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), {'bar': 43})
+
+    def test_dict_setitem_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=Dict()
+FOO['bar'] = 43
+''')
+        self.parser = Parser()
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), {'bar': 43})
+
+    def test_dict_setitem_3(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO={'foo': 42}
+FOO['bar'] = 43
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), {'foo': 42, 'bar': 43})
+
+    def test_dict_setitem_4(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''D={}
+D['foo'] = FOO
+''')
+        with self.assertRaises(TypeError):
+            d = self.parser.parse('recipe.xd')
+
+    def test_dict_getitem_keyerror_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''D={}
+D['foo'] = 42
+''')
+        d = self.parser.parse('recipe.xd')
+        with self.assertRaises(KeyError):
+            d['D']['bar']
+
+    def test_dict_getitem_keyerror_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('D=Dict()\n')
+        d = self.parser.parse('recipe.xd')
+        with self.assertRaises(KeyError):
+            d['D']['bar']
+
+    def test_dict_list_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''D={}
+D['foo'] = [1, 2]
+D['foo'].append(3)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['D'].get(), {'foo': [1, 2, 3]})
+
+    def test_dict_list_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''D={}
+D['foo'] = [1, 2]
+D['foo'].append_if(FOO, 3)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['D'].get(), {'foo': [1, 2]})
+
+    def test_dict_list_3(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''D={}
+D['foo'] = [1, 2]
+D['foo'].append_if(FOO, 3)
+FOO=True
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['FOO'].get(), True)
+        self.assertEqual(d['D'].get(), {'foo': [1, 2, 3]})
+
+    def test_dict_list_4(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''D={}
+FOO = [1,2]
+D['foo'] = List(FOO)
+FOO.append(3)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['FOO'].get(), [1, 2, 3])
+        self.assertEqual(d['D'].get(), {'foo': [1, 2, 3]})
+
+    def test_dict_list_5(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''D={}
+FOO = [1,2]
+D['foo'] = []
+D['foo'] = FOO
+FOO.append(3)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['FOO'].get(), [1, 2, 3])
+        self.assertEqual(d['D'].get(), {'foo': [1, 2, 3]})
+
+    def test_dict_list_6(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FILES={}
+libdir = '/usr/lib'
+FILES['foo'] = ['%s/foo.so'%(libdir)]
+FILES['foo'].append('%s/bar.so'%(libdir))
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['libdir'].get(), '/usr/lib')
+        self.assertEqual(d['FILES'].get(), {'foo': ['/usr/lib/foo.so',
+                                                    '/usr/lib/bar.so']})

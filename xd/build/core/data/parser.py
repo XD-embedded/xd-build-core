@@ -8,6 +8,7 @@ from .expr import *
 from .string import *
 from .num import *
 from .list import *
+from .dict import *
 import ast
 
 
@@ -20,7 +21,7 @@ class SyntaxError(Exception):
 
 class Parser(object):
 
-    constructors = ['String', 'Bool', 'Int', 'Float', 'List']
+    constructors = ['String', 'Bool', 'Int', 'Float', 'List', 'Dict']
 
     def __init__(self):
         self.backlog = ast.Module()
@@ -64,6 +65,9 @@ class Parser(object):
             return value
         elif isinstance(value, ast.List):
             value.elts = [self.parse_value(e) for e in value.elts]
+            return value
+        elif isinstance(value, ast.Dict):
+            value.values = [self.parse_value(v) for v in value.values]
             return value
         elif (strwrap and
               isinstance(value, ast.BinOp) and
@@ -110,7 +114,7 @@ class ExpressionStore(object):
         self.id = id
 
     def store(self, value):
-        if type(value) in (ast.Str, ast.Num, ast.List,
+        if type(value) in (ast.Str, ast.Num, ast.List, ast.Dict,
                            ast.NameConstant):
             return value
         expr = Expression(value)
