@@ -20,11 +20,8 @@ class Variable(object):
         self.set_ifs = []
 
     def __str__(self):
-        value = self.get()
-        if value is None:
-            return ''
-        else:
-            return str(value)
+        return "%s(%s)"%(self.__class__.__name__,
+                         getattr(self, 'name', ''))
 
     def set(self, value):
         value = self.canonicalize(value)

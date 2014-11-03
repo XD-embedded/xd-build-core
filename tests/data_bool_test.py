@@ -18,15 +18,15 @@ class tests(unittest.case.TestCase):
 
     def test_str_1(self):
         s = Bool(True)
-        self.assertEqual(str(s), 'True')
+        self.assertEqual(str(s), 'Bool()')
 
     def test_str_2(self):
         s = Bool(False)
-        self.assertEqual(str(s), 'False')
+        self.assertEqual(str(s), 'Bool()')
 
     def test_str_3(self):
         s = Bool()
-        self.assertEqual(str(s), '')
+        self.assertEqual(str(s), 'Bool()')
 
     def test_set_get(self):
         s = Bool(True)

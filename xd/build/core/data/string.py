@@ -15,6 +15,3 @@ class String(Sequence):
 
     basetype = str
     empty = ''
-
-    def __str__(self):
-        return self.get() or ''

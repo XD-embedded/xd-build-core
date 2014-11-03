@@ -18,15 +18,15 @@ class tests(unittest.case.TestCase):
 
     def test_str_1(self):
         s = String('foo')
-        self.assertEqual(str(s), 'foo')
+        self.assertEqual(str(s), 'String()')
 
     def test_str_2(self):
         s = String('')
-        self.assertEqual(str(s), '')
+        self.assertEqual(str(s), 'String()')
 
     def test_str_3(self):
         s = String()
-        self.assertEqual(str(s), '')
+        self.assertEqual(str(s), 'String()')
 
     def test_set_get(self):
         s = String('foo')

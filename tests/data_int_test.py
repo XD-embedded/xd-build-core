@@ -14,11 +14,11 @@ class tests(unittest.case.TestCase):
 
     def test_str_1(self):
         s = Int(42)
-        self.assertEqual(str(s), '42')
+        self.assertEqual(str(s), 'Int()')
 
     def test_str_2(self):
         s = Int()
-        self.assertEqual(str(s), '')
+        self.assertEqual(str(s), 'Int()')
 
     def test_set_get(self):
         s = Int(42)

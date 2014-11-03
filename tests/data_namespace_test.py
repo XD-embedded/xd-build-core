@@ -392,3 +392,19 @@ class tests(unittest.case.TestCase):
         self.ns['FOO'].prepend_if(Expression('I'), Expression('I'))
         with self.assertRaises(TypeError):
             self.ns['FOO'].get()
+
+    def test_str_string(self):
+        self.ns['FOO'] = ''
+        self.assertEqual(str(self.ns['FOO']), 'String(FOO)')
+
+    def test_str_bool(self):
+        self.ns['FOO'] = True
+        self.assertEqual(str(self.ns['FOO']), 'Bool(FOO)')
+
+    def test_str_int(self):
+        self.ns['FOO'] = 42
+        self.assertEqual(str(self.ns['FOO']), 'Int(FOO)')
+
+    def test_str_float(self):
+        self.ns['FOO'] = 3.14
+        self.assertEqual(str(self.ns['FOO']), 'Float(FOO)')
