@@ -18,88 +18,21 @@ class tests(unittest.case.TestCase):
 
     def test_str_1(self):
         s = String('foo')
-        self.assertEqual(str(s), 'foo')
+        self.assertEqual(str(s), 'String()')
 
     def test_str_2(self):
         s = String('')
-        self.assertEqual(str(s), '')
+        self.assertEqual(str(s), 'String()')
 
     def test_str_3(self):
         s = String()
-        with self.assertRaises(TypeError):
-            str(s)
+        self.assertEqual(str(s), 'String()')
 
     def test_set_get(self):
         s = String('foo')
         self.assertEqual(s.get(), 'foo')
         s.set('bar')
         self.assertEqual(s.get(), 'bar')
-
-    def test_len_1(self):
-        s = String('foobar')
-        self.assertEqual(len(s), 6)
-
-    def test_getitem_1(self):
-        s = String('foobar')
-        self.assertEqual(s[3], 'b')
-
-    def test_getitem_2(self):
-        s = String('foobar')
-        with self.assertRaises(IndexError):
-            s[6]
-
-    def test_contains_1(self):
-        s = String('foobar')
-        self.assertTrue('f' in s)
-        self.assertTrue('o' in s)
-        self.assertTrue('b' in s)
-        self.assertTrue('a' in s)
-        self.assertTrue('r' in s)
-
-    def test_contains_2(self):
-        s = String('foobar')
-        self.assertFalse('x' in s)
-        self.assertFalse('y' in s)
-        self.assertFalse('z' in s)
-
-    def test_index_1(self):
-        s = String('foobar')
-        self.assertEqual(s.index('f'), 0)
-        self.assertEqual(s.index('o'), 1)
-        self.assertEqual(s.index('b'), 3)
-        self.assertEqual(s.index('a'), 4)
-        self.assertEqual(s.index('r'), 5)
-
-    def test_index_2(self):
-        s = String('foobar')
-        with self.assertRaises(ValueError):
-            s.index('x')
-
-    def test_index_3(self):
-        s = String('foobar')
-        self.assertEqual(s.index('o', 2), 2)
-
-    def test_index_4(self):
-        s = String('foobar')
-        with self.assertRaises(ValueError):
-            s.index('o', 3)
-
-    def test_index_5(self):
-        s = String('foobar')
-        with self.assertRaises(ValueError):
-            s.index('b', end=2)
-
-    def test_count_0(self):
-        s = String('foobar')
-        self.assertEqual(s.count('x'), 0)
-
-    def test_count_1(self):
-        s = String('foobar')
-        self.assertEqual(s.count('f'), 1)
-
-    def test_count_2(self):
-        s = String('foobar')
-        self.assertEqual(s.count('o'), 2)
 
     def test_append_1(self):
         s = String('foo')

@@ -12,89 +12,65 @@ __all__ = ['Sequence']
 
 class Sequence(Variable):
 
-    __slots__ = ['prepends', 'appends']
+    __slots__ = ['amends', 'amend_ifs']
 
     def __init__(self, value=None):
-        self.prepends = []
-        self.appends  = []
+        self.amends = []
+        self.amend_ifs = []
         super(Sequence, self).__init__(value)
-
-    def __getitem__(self, index):
-        return self.get().__getitem__(index)
-
-    def __len__(self):
-        return self.get().__len__()
-
-    def __contains__(self, item):
-        return self.get().__contains__(item)
-
-    def index(self, sub, start=0, end=None):
-        if end is None:
-            return self.get().index(sub, start)
-        else:
-            return self.get().index(sub, start, end)
-
-    def count(self, sub):
-        return self.get().count(sub)
 
     def set(self, value):
         super(Sequence, self).set(value)
-        self.prepends = []
-        self.appends  = []
+        self.amends = []
 
     def prepend(self, value):
-        if isinstance(value, Variable):
-            value = value.expression()
-        if not self.isvalid(value):
-            raise TypeError('cannot prepend %s to %s'%(type(value), type(self)))
-        #self.cache.invalidate()
-        self.prepends.append(value)
+        value = self.canonicalize(value)
+        self.validate_value(value)
+        self.amends.append((self.amend_prepend, value))
 
     def append(self, value):
-        if isinstance(value, Variable):
-            value = value.expression()
-        if not self.isvalid(value):
-            raise TypeError('cannot append %s to %s'%(type(value), type(self)))
-        #self.cache.invalidate()
-        self.appends.append(value)
-
-    def amend_prepend(self, value, amend_value):
-        assert self.isvalid(amend_value)
-        if isinstance(amend_value, Expression):
-            amend_value = self.scope.eval(amend_value)
-        if amend_value is None:
-            return value
-        if value is None:
-            value = self.empty
-        if isinstance(amend_value, self.basetype):
-            value = amend_value + value
-        else:
-            raise TypeError(
-                "unsupported prepend operation: %s to %s"%(
-                    type(amend_value), type(value)))
-        return value
-
-    def amend_append(self, value, amend_value):
-        assert self.isvalid(amend_value)
-        if isinstance(amend_value, Expression):
-            amend_value = self.scope.eval(amend_value)
-        if amend_value is None:
-            return value
-        if value is None:
-            value = self.empty
-        if isinstance(amend_value, self.basetype):
-            value = value + amend_value
-        else:
-            raise TypeError(
-                "unsupported append operation: %s to %s"%(
-                    type(amend_value), type(value)))
-        return value
+        value = self.canonicalize(value)
+        self.validate_value(value)
+        self.amends.append((self.amend_append, value))
 
     def amend(self, value):
-        if self.prepends:
-            for amend_value in self.prepends:
-                value = self.amend_prepend(value, amend_value)
-        if self.appends:
-            for amend_value in self.appends:
-                value = self.amend_append(value, amend_value)
+        for amend_func, amend_value in self.amends:
+            value = self.amend_it(value, amend_func, amend_value)
+        return value
+
+    def amend_it(self, value, amend_func, amend_value):
+        amend_value = self.eval(amend_value)
+        if amend_value is None:
+            return value
+        if value is None:
+            value = self.empty
+        return amend_func(value, amend_value)
+
+    def amend_prepend(self, value, amend_value):
+        self.validate_value(amend_value)
+        return amend_value + value
+
+    def amend_append(self, value, amend_value):
+        self.validate_value(amend_value)
+        return value + amend_value
+
+    def prepend_if(self, condition, value):
+        condition = self.canonicalize(condition)
+        assert isinstance(condition, Expression)
+        value = self.canonicalize(value)
+        self.validate_value(value)
+        self.amend_ifs.append((condition, self.amend_prepend, value))
+
+    def append_if(self, condition, value):
+        condition = self.canonicalize(condition)
+        assert isinstance(condition, Expression)
+        value = self.canonicalize(value)
+        self.validate_value(value)
+        self.amend_ifs.append((condition, self.amend_append, value))
+
+    def amend_if(self, value):
+        for (condition, amend_func, amend_value) in self.amend_ifs:
+            if not self.eval_condition(condition):
+                continue
+            value = self.amend_it(value, amend_func, amend_value)
         return value

@@ -46,6 +46,70 @@ FOOBAR=FOO+BAR''')
         self.assertEqual(d['BAR'].get(), 'bar')
         self.assertEqual(d['FOOBAR'].get(), 'foobar')
 
+    def test_parse_set_if_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO="foo"
+FOOBAR=String(FOO)
+FOOBAR.set_if(BAR, BAR)
+BAR="bar"
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 'foo')
+        self.assertEqual(d['BAR'].get(), 'bar')
+        self.assertEqual(d['FOOBAR'].get(), 'bar')
+
+    def test_parse_set_if_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO="f"
+BAR="b"
+FOOBAR=String('hello world')
+FOOBAR.set_if(BAR, 'bar')
+FOOBAR.set_if(FOO, 'foo')
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 'f')
+        self.assertEqual(d['BAR'].get(), 'b')
+        self.assertEqual(d['FOOBAR'].get(), 'foo')
+
+    def test_parse_set_if_3(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO="f"
+BAR="b"
+FOOBAR=String('hello world')
+FOOBAR.set_if(FOO, 'foo')
+FOOBAR.set_if(BAR, 'bar')
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 'f')
+        self.assertEqual(d['BAR'].get(), 'b')
+        self.assertEqual(d['FOOBAR'].get(), 'bar')
+
+    def test_parse_set_if_4(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO="f"
+FOOBAR=String('hello world')
+FOOBAR.set_if(FOO=='f', 'foo')
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['FOO'].get(), 'f')
+        self.assertEqual(d['FOOBAR'].get(), 'foo')
+
+    def test_parse_set_if_5(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO="f"
+FOOBAR=String('hello world')
+FOOBAR.set_if(FOO=='f', 'foo')
+FOO="g"
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['FOO'].get(), 'g')
+        self.assertEqual(d['FOOBAR'].get(), 'hello world')
+
     def test_parse_append_1(self):
         with open('recipe.xd', 'w') as f:
             f.write('''FOO="foo"
@@ -80,6 +144,54 @@ FOO="foo".capitalize()
         self.assertEqual(len(d), 1)
         self.assertEqual(d['FOO'].get(), 'Foo')
 
+    def test_parse_append_if_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO='foo'
+BAR='bar'
+FOO.append_if(BAR, 'baaaar')
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['FOO'].get(), 'foobaaaar')
+        self.assertEqual(d['BAR'].get(), 'bar')
+
+    def test_parse_append_if_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO="foo"
+BAR='bar'
+B='b'
+FOO.append_if(B, BAR)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 'foobar')
+        self.assertEqual(d['BAR'].get(), 'bar')
+        self.assertEqual(d['B'].get(), 'b')
+
+    def test_parse_append_if_3(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO="foo"
+BAR='bar'
+B=''
+FOO.append_if(B, BAR)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 'foo')
+        self.assertEqual(d['BAR'].get(), 'bar')
+        self.assertEqual(d['B'].get(), '')
+
+    def test_parse_append_if_4(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO="foo"
+BAR='bar'
+FOO.append_if(B, BAR)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['FOO'].get(), 'foo')
+        self.assertEqual(d['BAR'].get(), 'bar')
+
     def test_parse_augassign(self):
         with open('recipe.xd', 'w') as f:
             f.write('''FOO='foo'
@@ -99,3 +211,110 @@ FOO+='bar'
             f.write('# this is a comment line\n')
         d = self.parser.parse('recipe.xd')
         self.assertEqual(len(d), 0)
+
+    def test_parse_bool(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=True
+BAR=False
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['FOO'].get(), True)
+        self.assertEqual(d['BAR'].get(), False)
+
+    def test_parse_int_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('FOO=42\n')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), 42)
+
+    def test_parse_int_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=42
+BAR=43
+FOOBAR=Int(FOO+BAR)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 42)
+        self.assertEqual(d['BAR'].get(), 43)
+        self.assertEqual(d['FOOBAR'].get(), 85)
+
+    def test_parse_float_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('FOO=3.14\n')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), 3.14)
+
+    def test_parse_float_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=3.14
+BAR=22.7
+FOOBAR=Float(FOO+BAR)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 3.14)
+        self.assertEqual(d['BAR'].get(), 22.7)
+        self.assertEqual(d['FOOBAR'].get(), 25.84)
+
+    def test_str_mod(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO='foo'
+BAR='bar'
+FOOBAR="%s and %s"%(FOO, BAR)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), 'foo')
+        self.assertEqual(d['BAR'].get(), 'bar')
+        self.assertEqual(d['FOOBAR'].get(), 'foo and bar')
+
+    def test_list_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write("FOO=['foo']\n")
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), ['foo'])
+
+    def test_list_add(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=['foo']
+BAR=['bar']
+FOOBAR=[]
+FOOBAR=FOO+BAR
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), ['foo'])
+        self.assertEqual(d['BAR'].get(), ['bar'])
+        self.assertEqual(d['FOOBAR'].get(), ['foo', 'bar'])
+
+    def test_list_sort_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=['foo', 'bar', 'hello', 'world']
+FOO.sort()
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), ['bar', 'foo', 'hello', 'world'])
+
+    def test_list_sort_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=['foo', 'bar', 'hello', 'world']
+FOO.sort(reverse=True)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), ['world', 'hello', 'foo', 'bar'])
+
+    def test_list_sort_3(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=['foo', 'bar', 'hello', 'world']
+FOO.sort(reverse=False)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), ['bar', 'foo', 'hello', 'world'])

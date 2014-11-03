@@ -6,6 +6,8 @@ log.setLevel(logging.INFO)
 from .namespace import *
 from .expr import *
 from .string import *
+from .num import *
+from .list import *
 import ast
 
 
@@ -25,17 +27,37 @@ class Parser(object):
     def parse(self, path):
         expression_store = ExpressionStore('_expr')
         g = {'_expr': expression_store.expressions,
-             'String': String}
+             'String': String,
+             'Bool': Bool,
+             'Int': Int,
+             'Float': Float,
+             'List': List,
+         }
         l = Namespace()
         source = open(path).read()
         statements = ast.parse(source, path)
         for statement in statements.body:
             if isinstance(statement, ast.Assign):
-                if type(statement.value) in (ast.Str,):
+                if type(statement.value) in (
+                        ast.Str, ast.Num, ast.List, ast.NameConstant):
+                    self.backlog.body.append(statement)
+                elif (isinstance(statement.value, ast.BinOp) and
+                      isinstance(statement.value.left, ast.Str) and
+                      isinstance(statement.value.op, ast.Mod)):
+                    str_statement = ast.Call()
+                    str_statement.func = ast.Name()
+                    str_statement.func.ctx = ast.Load()
+                    str_statement.func.id = 'String'
+                    str_statement.args = [
+                        expression_store.store(statement.value)]
+                    str_statement.keywords = []
+                    ast.fix_missing_locations(str_statement)
+                    statement.value = str_statement
                     self.backlog.body.append(statement)
                 elif (isinstance(statement.value, ast.Call) and
                       hasattr(statement.value.func, 'id') and
-                      statement.value.func.id in ('String',)):
+                      statement.value.func.id in (
+                          'String', 'Bool', 'Int', 'Float', 'List')):
                     statement.value.args = [
                         expression_store.store(arg)
                         for arg in statement.value.args]
@@ -44,6 +66,13 @@ class Parser(object):
                     statement.value = expression_store.store(statement.value)
                     self.backlog.body.append(statement)
             elif isinstance(statement, ast.Expr):
+                assert isinstance(statement.value, ast.Call)
+                statement.value.args = [
+                    expression_store.store(arg)
+                    for arg in statement.value.args]
+                for i in range(len(statement.value.keywords)):
+                    keyword = statement.value.keywords[i]
+                    keyword.value = expression_store.store(keyword.value)
                 self.backlog.body.append(statement)
             else:
                 raise SyntaxError('unsupported statement: %s'%(
@@ -65,7 +94,7 @@ class ExpressionStore(object):
         self.id = id
 
     def store(self, value):
-        if type(value) in (ast.Str,):
+        if type(value) in (ast.Str, ast.Num, ast.List, ast.NameConstant):
             return value
         expr = Expression(value)
         self.expressions.append(expr)

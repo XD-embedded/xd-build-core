@@ -1,0 +1,10 @@
+I = Int()
+I = X + 1000 + Y
+X = 42
+Y = 43
+
+N = 0
+LOGIC = Int()
+LOGIC = N or X
+
+M = Int(47)

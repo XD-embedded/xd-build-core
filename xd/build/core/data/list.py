@@ -1,0 +1,97 @@
+import logging
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+
+
+from .sequence import *
+from .var import *
+from .expr import *
+
+
+__all__ = ['List']
+
+
+class List(Sequence):
+
+    __slots__ = ['sorted']
+
+    basetype = list
+    empty = []
+
+    def get(self):
+        value = super(Sequence, self).get()
+        sort_reverse = getattr(self, 'sorted', None)
+        if sort_reverse is not None:
+            value.sort(reverse=sort_reverse)
+        return value
+
+    def validate_element(self, value):
+        if not type(value) in (str, bool, int, float, tuple):
+            raise TypeError('invalid type for %s element in <%s>: %s'%(
+                self.__class__.__name__, getattr(self, 'name', ''),
+                value.__class__.__name__))
+
+    def prepend(self, value):
+        value = self.canonicalize(value)
+        self.validate_element(value)
+        self.amends.append((self.amend_prepend, [value]))
+
+    def append(self, value):
+        value = self.canonicalize(value)
+        self.validate_element(value)
+        self.amends.append((self.amend_append, [value]))
+
+    def prepend_if(self, condition, value):
+        condition = self.canonicalize(condition)
+        assert isinstance(condition, Expression)
+        value = self.canonicalize(value)
+        self.validate_element(value)
+        self.amend_ifs.append((condition, self.amend_prepend, [value]))
+
+    def append_if(self, condition, value):
+        condition = self.canonicalize(condition)
+        assert isinstance(condition, Expression)
+        value = self.canonicalize(value)
+        self.validate_element(value)
+        self.amend_ifs.append((condition, self.amend_append, [value]))
+
+    def remove(self, value):
+        if isinstance(value, Variable):
+            value = value.expression()
+        self.amends.append((self.amend_remove, value))
+
+    def remove_if(self, condition, value):
+        condition = self.canonicalize(condition)
+        assert isinstance(condition, Expression)
+        value = self.canonicalize(value)
+        self.validate_element(value)
+        self.amend_ifs.append((condition, self.amend_remove, value))
+
+    def amend_remove(self, value, amend_value):
+        self.validate_element(amend_value)
+        try:
+            value.remove(amend_value)
+        except ValueError:
+            pass
+        return value
+
+    def extend(self, value):
+        value = self.canonicalize(value)
+        self.validate_value(value)
+        self.amends.append((self.amend_extend, value))
+
+    def extend_if(self, condition, value):
+        condition = self.canonicalize(condition)
+        assert isinstance(condition, Expression)
+        value = self.canonicalize(value)
+        self.validate_value(value)
+        self.amend_ifs.append((condition, self.amend_extend, value))
+
+    def amend_extend(self, value, amend_value):
+        self.validate_value(amend_value)
+        value.extend(amend_value)
+        return value
+
+    def sort(self, reverse=False):
+        assert isinstance(reverse, int)
+        self.sorted = reverse

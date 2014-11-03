@@ -1,0 +1,10 @@
+I = Float()
+I = X + 0.0001 + Y
+X = 4.2
+Y = 4.3
+
+N = 0.0
+LOGIC = Float()
+LOGIC = N or X
+
+PI = Float(3.14)

@@ -6,6 +6,8 @@ log.setLevel(logging.INFO)
 from .var import *
 from .expr import *
 from .string import *
+from .num import *
+from .list import *
 
 
 __all__ = ['Namespace', 'MultiBinding']
@@ -41,6 +43,14 @@ class Namespace(dict):
             return
         if isinstance(value, str):
             value = String(value)
+        elif isinstance(value, bool):
+            value = Bool(value)
+        elif isinstance(value, int):
+            value = Int(value)
+        elif isinstance(value, float):
+            value = Float(value)
+        elif isinstance(value, list):
+            value = List(value)
         if isinstance(value, Expression):
             raise TypeError(
                 'cannot assign Expression to untyped Variable %s'%(key))
