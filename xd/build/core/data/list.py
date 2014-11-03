@@ -6,6 +6,7 @@ log.setLevel(logging.INFO)
 from .sequence import *
 from .var import *
 from .expr import *
+import copy
 
 
 __all__ = ['List']
@@ -70,7 +71,9 @@ class List(Sequence):
     def amend_remove(self, value, amend_value):
         self.validate_element(amend_value)
         try:
-            value.remove(amend_value)
+            value2 = copy.copy(value)
+            value2.remove(amend_value)
+            value = value2
         except ValueError:
             pass
         return value
@@ -89,6 +92,7 @@ class List(Sequence):
 
     def amend_extend(self, value, amend_value):
         self.validate_value(amend_value)
+        value = copy.copy(value)
         value.extend(amend_value)
         return value
 
