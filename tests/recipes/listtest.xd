@@ -1,0 +1,10 @@
+LIST = ['foo', 'bar', 'bad stuff']
+LIST.remove('bad stuff')
+LIST.remove_if(BAR, 'bar')
+LIST.remove_if(FOO, 'foo')
+LIST.sort()
+OTHER = List(LIST)
+OTHER.extend(['hello', 'world'])
+BAR = True
+OTHER.prepend('before')
+OTHER.append('after')
