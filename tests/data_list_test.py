@@ -127,3 +127,42 @@ class tests(unittest.case.TestCase):
         s = List(['foo', 'bar', 'hello', 'world'])
         s.sort(reverse=True)
         self.assertEqual(s.get(), ['world', 'hello', 'foo', 'bar'])
+
+    def test_value_contamination_prepend(self):
+        s = List([1])
+        self.assertEqual(s.get(), [1])
+        s.prepend(2)
+        self.assertEqual(s.get(), [2,1])
+        self.assertEqual(s.get(), [2,1])
+        s.prepend(3)
+        self.assertEqual(s.get(), [3,2,1])
+        self.assertEqual(s.get(), [3,2,1])
+
+    def test_value_contamination_append(self):
+        s = List([1])
+        self.assertEqual(s.get(), [1])
+        s.append(2)
+        self.assertEqual(s.get(), [1,2])
+        self.assertEqual(s.get(), [1,2])
+        s.append(3)
+        self.assertEqual(s.get(), [1,2,3])
+        self.assertEqual(s.get(), [1,2,3])
+
+    def test_value_contamination_remove(self):
+        s = List([1,2,1,1])
+        self.assertEqual(s.get(), [1,2,1,1])
+        s.remove(1)
+        self.assertEqual(s.get(), [2,1,1])
+        self.assertEqual(s.get(), [2,1,1])
+        s.remove(1)
+        self.assertEqual(s.get(), [2,1])
+        self.assertEqual(s.get(), [2,1])
+
+    def test_value_contamination_extend(self):
+        s = List([1,2])
+        self.assertEqual(s.get(), [1,2])
+        s.extend([3,4])
+        self.assertEqual(s.get(), [1,2,3,4])
+        self.assertEqual(s.get(), [1,2,3,4])
+
+
