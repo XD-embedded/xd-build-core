@@ -99,6 +99,13 @@ class tests(unittest.case.TestCase):
         self.ns['FOO'].append(self.ns['BAR'])
         self.assertEqual(self.ns['FOO'].get(), 'foobar')
 
+    def test_append_to_expr(self):
+        self.ns['FOO'] = 'foo'
+        self.ns['FOOBAR'] = String(Expression('FOO'))
+        self.ns['FOOBAR'].append('bar')
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+        self.assertEqual(self.ns['FOOBAR'].get(), 'foobar')
+
     def test_append_expr(self):
         self.ns['FOO'] = 'foo'
         self.ns['BAR'] = 'bar'
@@ -171,8 +178,8 @@ class tests(unittest.case.TestCase):
 
     def test_init_with_other_variable(self):
         self.ns['FOO'] = 'foo'
-        BAR = String(self.ns['FOO'])
-        self.ns['BAR'] = BAR
+        FOO = String(self.ns['FOO'])
+        self.ns['BAR'] = FOO
         self.ns['FOO'] = 'bar'
         self.assertEqual(self.ns['FOO'].get(), 'bar')
         self.assertEqual(self.ns['BAR'].get(), 'bar')
@@ -223,6 +230,13 @@ class tests(unittest.case.TestCase):
         self.assertEqual(self.ns['FOOBAR'].get(), 'bar')
 
     def test_str_set_if_8(self):
+        self.ns['FOOBAR'] = 'hello world'
+        self.ns['BAR'] = 'bar'
+        self.ns['FOO'] = 'foo'
+        self.ns['FOOBAR'].set_if(Expression('BAR'), Expression('FOO'))
+        self.assertEqual(self.ns['FOOBAR'].get(), 'foo')
+
+    def test_str_set_if_9(self):
         self.ns['FOOBAR'] = 'hello world'
         self.ns['BAR'] = 'bar'
         self.ns['FOO'] = 'foo'
