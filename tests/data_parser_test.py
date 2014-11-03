@@ -318,3 +318,40 @@ FOO.sort(reverse=False)
         d = self.parser.parse('recipe.xd')
         self.assertEqual(len(d), 1)
         self.assertEqual(d['FOO'].get(), ['bar', 'foo', 'hello', 'world'])
+
+    def test_list_strmod_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=List()
+libdir = '/usr/lib'
+FOO = ['%s/foo.so'%(libdir), H+W, ' '.join([H, W]), H + ' and ' + W]
+H = 'hello'
+W = 'world'
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 4)
+        self.assertEqual(d['libdir'].get(), '/usr/lib')
+        self.assertEqual(d['FOO'].get(), ['/usr/lib/foo.so', 'helloworld',
+                                          'hello world', 'hello and world'])
+        self.assertEqual(d['H'].get(), 'hello')
+        self.assertEqual(d['W'].get(), 'world')
+
+    def test_list_strformat_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=List()
+libdir = '/usr/lib'
+FOO = ['{0}/foo.so'.format(libdir)]
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['libdir'].get(), '/usr/lib')
+        self.assertEqual(d['FOO'].get(), ['/usr/lib/foo.so'])
+
+    def test_strformat_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''prefix = '/usr'
+libdir = '{0}/lib'.format(prefix)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['prefix'].get(), '/usr')
+        self.assertEqual(d['libdir'].get(), '/usr/lib')

@@ -44,6 +44,11 @@ class tests(unittest.case.TestCase):
         s.append('bar')
         self.assertEqual(s.get(), ['bar'])
 
+    def test_append_3(self):
+        s = List()
+        s.append('bar')
+        self.assertEqual(s.get(), ['bar'])
+
     def test_append_4(self):
         s = List(['foo'])
         s.append('xy')

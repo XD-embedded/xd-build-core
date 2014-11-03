@@ -14,10 +14,10 @@ class Sequence(Variable):
 
     __slots__ = ['amends', 'amend_ifs']
 
-    def __init__(self, value=None):
+    def __init__(self, value=None, scope=None):
         self.amends = []
         self.amend_ifs = []
-        super(Sequence, self).__init__(value)
+        super(Sequence, self).__init__(value, scope)
 
     def set(self, value):
         super(Sequence, self).set(value)

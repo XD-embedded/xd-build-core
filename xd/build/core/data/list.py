@@ -21,13 +21,18 @@ class List(Sequence):
 
     def get(self):
         value = super(Sequence, self).get()
+        if value is None:
+            return None
+        value = [v.get() if isinstance(v, Variable) else
+                 self.scope.eval(v) if isinstance(v, Expression) else v
+                 for v in value]
         sort_reverse = getattr(self, 'sorted', None)
         if sort_reverse is not None:
             value.sort(reverse=sort_reverse)
         return value
 
     def validate_element(self, value):
-        if not type(value) in (str, bool, int, float, tuple):
+        if not type(value) in (str, bool, int, float, tuple, Expression):
             raise TypeError('invalid type for %s element in <%s>: %s'%(
                 self.__class__.__name__, getattr(self, 'name', ''),
                 value.__class__.__name__))

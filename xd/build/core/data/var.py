@@ -13,10 +13,11 @@ class Variable(object):
 
     __slots__ = ['scope', 'name', 'value', 'set_ifs']
 
-    def __init__(self, value=None):
+    def __init__(self, value=None, scope=None):
         value = self.canonicalize(value)
         self.validate_value(value)
         self.value = value
+        self.scope = scope
         self.set_ifs = []
 
     def __str__(self):
@@ -70,7 +71,10 @@ class Variable(object):
         if amend_value is None:
             return value
         if value is None:
-            value = self.empty
+            try:
+                value = self.empty.copy()
+            except AttributeError:
+                value = self.empty
         return amend_func(value, amend_value)
 
     def validate_value(self, value):
@@ -96,5 +100,8 @@ class Variable(object):
         return value
 
     def expression(self):
-        assert self.name
+        try:
+            name = self.name
+        except AttributeError:
+            return self.get()
         return Expression(self.name)
