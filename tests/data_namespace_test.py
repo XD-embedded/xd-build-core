@@ -422,3 +422,101 @@ class tests(unittest.case.TestCase):
     def test_str_float(self):
         self.ns['FOO'] = 3.14
         self.assertEqual(str(self.ns['FOO']), 'Float(FOO)')
+
+    def test_list_set_if_1(self):
+        self.ns['FOOBAR'] = ['foo']
+        self.ns['BAR'] = True
+        self.ns['FOOBAR'].set_if(Expression('BAR'), ['bar'])
+        self.assertEqual(self.ns['FOOBAR'].get(), ['bar'])
+
+    def test_list_set_if_2(self):
+        self.ns['FOOBAR'] = ['foo']
+        self.ns['BAR'] = False
+        self.ns['FOOBAR'].set_if(Expression('BAR'), ['bar'])
+        self.assertEqual(self.ns['FOOBAR'].get(), ['foo'])
+
+    def test_list_set_if_3(self):
+        self.ns['FOOBAR'] = ['foo']
+        self.ns['FOOBAR'].set_if(Expression('BAR'), ['bar'])
+        self.assertEqual(self.ns['FOOBAR'].get(), ['foo'])
+
+    def test_list_prepend_if_1(self):
+        self.ns['FOO'] = ['foo']
+        self.ns['BAR'] = True
+        self.ns['FOO'].prepend_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), ['bar', 'foo'])
+
+    def test_list_prepend_if_2(self):
+        self.ns['FOO'] = ['foo']
+        self.ns['BAR'] = False
+        self.ns['FOO'].prepend_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), ['foo'])
+
+    def test_list_prepend_if_3(self):
+        self.ns['FOO'] = ['foo']
+        self.ns['FOO'].prepend_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), ['foo'])
+
+    def test_list_append_if_1(self):
+        self.ns['FOO'] = ['foo']
+        self.ns['BAR'] = True
+        self.ns['FOO'].append_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), ['foo', 'bar'])
+
+    def test_list_append_if_2(self):
+        self.ns['FOO'] = ['foo']
+        self.ns['BAR'] = False
+        self.ns['FOO'].append_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), ['foo'])
+
+    def test_list_append_if_3(self):
+        self.ns['FOO'] = ['foo']
+        self.ns['FOO'].append_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['FOO'].get(), ['foo'])
+
+    def test_list_remove_1(self):
+        self.ns['L'] = ['foo', 'bar']
+        self.ns['BAR'] = 'bar'
+        self.ns['L'].remove(Expression('BAR'))
+        self.assertEqual(self.ns['L'].get(), ['foo'])
+
+    def test_list_remove_2(self):
+        self.ns['L'] = ['foo', 'bar']
+        self.ns['BAR'] = 'bar'
+        self.ns['L'].remove(self.ns['BAR'])
+        self.assertEqual(self.ns['L'].get(), ['foo'])
+
+    def test_list_remove_if_1(self):
+        self.ns['L'] = ['foo', 'bar']
+        self.ns['BAR'] = True
+        self.ns['L'].remove_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['L'].get(), ['foo'])
+
+    def test_list_remove_if_2(self):
+        self.ns['L'] = ['foo', 'bar']
+        self.ns['BAR'] = False
+        self.ns['L'].remove_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['L'].get(), ['foo', 'bar'])
+
+    def test_list_remove_if_3(self):
+        self.ns['L'] = ['foo', 'bar']
+        self.ns['L'].remove_if(Expression('BAR'), 'bar')
+        self.assertEqual(self.ns['L'].get(), ['foo', 'bar'])
+
+    def test_list_extend_if_1(self):
+        self.ns['L'] = ['foo', 'bar']
+        self.ns['BAR'] = True
+        self.ns['L'].extend_if(Expression('BAR'), ['hello', 'world'])
+        self.assertEqual(self.ns['L'].get(), ['foo', 'bar', 'hello', 'world'])
+
+    def test_list_extend_if_2(self):
+        self.ns['L'] = ['foo', 'bar']
+        self.ns['BAR'] = False
+        self.ns['L'].extend_if(Expression('BAR'), ['hello', 'world'])
+        self.assertEqual(self.ns['L'].get(), ['foo', 'bar'])
+
+    def test_list_extend_if_3(self):
+        self.ns['L'] = ['foo', 'bar']
+        self.ns['L'].extend_if(Expression('BAR'), ['hello', 'world'])
+        self.assertEqual(self.ns['L'].get(), ['foo', 'bar'])
+

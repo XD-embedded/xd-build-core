@@ -7,6 +7,7 @@ from .namespace import *
 from .expr import *
 from .string import *
 from .num import *
+from .list import *
 import ast
 
 
@@ -29,14 +30,16 @@ class Parser(object):
              'String': String,
              'Bool': Bool,
              'Int': Int,
-             'Float': Float}
+             'Float': Float,
+             'List': List,
+         }
         l = Namespace()
         source = open(path).read()
         statements = ast.parse(source, path)
         for statement in statements.body:
             if isinstance(statement, ast.Assign):
                 if type(statement.value) in (
-                        ast.Str, ast.Num, ast.NameConstant):
+                        ast.Str, ast.Num, ast.List, ast.NameConstant):
                     self.backlog.body.append(statement)
                 elif (isinstance(statement.value, ast.BinOp) and
                       isinstance(statement.value.left, ast.Str) and
@@ -54,7 +57,7 @@ class Parser(object):
                 elif (isinstance(statement.value, ast.Call) and
                       hasattr(statement.value.func, 'id') and
                       statement.value.func.id in (
-                          'String', 'Bool', 'Int', 'Float')):
+                          'String', 'Bool', 'Int', 'Float', 'List')):
                     statement.value.args = [
                         expression_store.store(arg)
                         for arg in statement.value.args]
@@ -91,7 +94,7 @@ class ExpressionStore(object):
         self.id = id
 
     def store(self, value):
-        if type(value) in (ast.Str, ast.Num):
+        if type(value) in (ast.Str, ast.Num, ast.List, ast.NameConstant):
             return value
         expr = Expression(value)
         self.expressions.append(expr)

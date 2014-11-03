@@ -271,3 +271,50 @@ FOOBAR="%s and %s"%(FOO, BAR)
         self.assertEqual(d['FOO'].get(), 'foo')
         self.assertEqual(d['BAR'].get(), 'bar')
         self.assertEqual(d['FOOBAR'].get(), 'foo and bar')
+
+    def test_list_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write("FOO=['foo']\n")
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), ['foo'])
+
+    def test_list_add(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=['foo']
+BAR=['bar']
+FOOBAR=[]
+FOOBAR=FOO+BAR
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d['FOO'].get(), ['foo'])
+        self.assertEqual(d['BAR'].get(), ['bar'])
+        self.assertEqual(d['FOOBAR'].get(), ['foo', 'bar'])
+
+    def test_list_sort_1(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=['foo', 'bar', 'hello', 'world']
+FOO.sort()
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), ['bar', 'foo', 'hello', 'world'])
+
+    def test_list_sort_2(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=['foo', 'bar', 'hello', 'world']
+FOO.sort(reverse=True)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), ['world', 'hello', 'foo', 'bar'])
+
+    def test_list_sort_3(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''FOO=['foo', 'bar', 'hello', 'world']
+FOO.sort(reverse=False)
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d['FOO'].get(), ['bar', 'foo', 'hello', 'world'])
