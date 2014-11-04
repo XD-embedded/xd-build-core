@@ -14,10 +14,10 @@ class Sequence(Variable):
 
     __slots__ = ['amends', 'amend_ifs']
 
-    def __init__(self, value=None):
+    def __init__(self, value=None, scope=None):
         self.amends = []
         self.amend_ifs = []
-        super(Sequence, self).__init__(value)
+        super(Sequence, self).__init__(value, scope)
 
     def set(self, value):
         super(Sequence, self).set(value)
@@ -32,19 +32,6 @@ class Sequence(Variable):
         value = self.canonicalize(value)
         self.validate_value(value)
         self.amends.append((self.amend_append, value))
-
-    def amend(self, value):
-        for amend_func, amend_value in self.amends:
-            value = self.amend_it(value, amend_func, amend_value)
-        return value
-
-    def amend_it(self, value, amend_func, amend_value):
-        amend_value = self.eval(amend_value)
-        if amend_value is None:
-            return value
-        if value is None:
-            value = self.empty
-        return amend_func(value, amend_value)
 
     def amend_prepend(self, value, amend_value):
         self.validate_value(amend_value)
@@ -67,10 +54,3 @@ class Sequence(Variable):
         value = self.canonicalize(value)
         self.validate_value(value)
         self.amend_ifs.append((condition, self.amend_append, value))
-
-    def amend_if(self, value):
-        for (condition, amend_func, amend_value) in self.amend_ifs:
-            if not self.eval_condition(condition):
-                continue
-            value = self.amend_it(value, amend_func, amend_value)
-        return value

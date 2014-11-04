@@ -8,6 +8,7 @@ from .expr import *
 from .string import *
 from .num import *
 from .list import *
+from .dict import *
 import ast
 
 
@@ -20,65 +21,84 @@ class SyntaxError(Exception):
 
 class Parser(object):
 
+    constructors = ['String', 'Bool', 'Int', 'Float', 'List', 'Dict']
+
     def __init__(self):
         self.backlog = ast.Module()
         self.backlog.body = []
 
     def parse(self, path):
-        expression_store = ExpressionStore('_expr')
-        g = {'_expr': expression_store.expressions,
-             'String': String,
-             'Bool': Bool,
-             'Int': Int,
-             'Float': Float,
-             'List': List,
-         }
-        l = Namespace()
+        self.expression_store = ExpressionStore('_expr')
+        self.namespace = Namespace()
+        self.globals = {
+            '_expr': self.expression_store.expressions,
+            '_namespace': self.namespace
+        }
+        for constructor in self.constructors:
+            self.globals[constructor] = eval(constructor)
         source = open(path).read()
         statements = ast.parse(source, path)
         for statement in statements.body:
-            if isinstance(statement, ast.Assign):
-                if type(statement.value) in (
-                        ast.Str, ast.Num, ast.List, ast.NameConstant):
-                    self.backlog.body.append(statement)
-                elif (isinstance(statement.value, ast.BinOp) and
-                      isinstance(statement.value.left, ast.Str) and
-                      isinstance(statement.value.op, ast.Mod)):
-                    str_statement = ast.Call()
-                    str_statement.func = ast.Name()
-                    str_statement.func.ctx = ast.Load()
-                    str_statement.func.id = 'String'
-                    str_statement.args = [
-                        expression_store.store(statement.value)]
-                    str_statement.keywords = []
-                    ast.fix_missing_locations(str_statement)
-                    statement.value = str_statement
-                    self.backlog.body.append(statement)
-                elif (isinstance(statement.value, ast.Call) and
-                      hasattr(statement.value.func, 'id') and
-                      statement.value.func.id in (
-                          'String', 'Bool', 'Int', 'Float', 'List')):
-                    statement.value.args = [
-                        expression_store.store(arg)
-                        for arg in statement.value.args]
-                    self.backlog.body.append(statement)
-                else:
-                    statement.value = expression_store.store(statement.value)
-                    self.backlog.body.append(statement)
-            elif isinstance(statement, ast.Expr):
-                assert isinstance(statement.value, ast.Call)
-                statement.value.args = [
-                    expression_store.store(arg)
-                    for arg in statement.value.args]
-                for i in range(len(statement.value.keywords)):
-                    keyword = statement.value.keywords[i]
-                    keyword.value = expression_store.store(keyword.value)
-                self.backlog.body.append(statement)
-            else:
-                raise SyntaxError('unsupported statement: %s'%(
-                    statement.__class__.__name__))
-        self.process_backlog(g, l, path)
-        return l
+            self.parse_statement(statement)
+        self.process_backlog(self.globals, self.namespace, path)
+        return self.namespace
+
+    def parse_statement(self, statement):
+        if isinstance(statement, ast.Assign):
+            statement.value = self.parse_value(statement.value)
+            self.backlog.body.append(statement)
+        elif isinstance(statement, ast.Expr):
+            assert isinstance(statement.value, ast.Call)
+            statement.value.args = [
+                self.parse_value(arg, strwrap=False)
+                for arg in statement.value.args]
+            for i in range(len(statement.value.keywords)):
+                keyword = statement.value.keywords[i]
+                keyword.value = self.expression_store.store(keyword.value)
+            self.backlog.body.append(statement)
+        else:
+            raise SyntaxError('unsupported statement: %s'%(
+                statement.__class__.__name__))
+
+    def parse_value(self, value, strwrap=True):
+        if type(value) in (ast.Str, ast.Num, ast.NameConstant):
+            return value
+        elif isinstance(value, ast.List):
+            value.elts = [self.parse_value(e) for e in value.elts]
+            return value
+        elif isinstance(value, ast.Dict):
+            value.values = [self.parse_value(v) for v in value.values]
+            return value
+        elif (strwrap and
+              isinstance(value, ast.BinOp) and
+              isinstance(value.left, ast.Str) and
+              isinstance(value.op, ast.Mod)):
+            statement = ast.copy_location(ast.Call(
+                func=ast.Name(ctx=ast.Load(), id='String'),
+                args=[self.expression_store.store(value),
+                      ast.Name(ctx=ast.Load(), id='_namespace')],
+                keywords=[]), value)
+            ast.fix_missing_locations(statement)
+            return statement
+        elif (strwrap and
+              isinstance(value, ast.Call) and
+              isinstance(value.func, ast.Attribute) and
+              isinstance(value.func.value, ast.Str)):
+            statement = ast.copy_location(ast.Call(
+                func=ast.Name(ctx=ast.Load(), id='String'),
+                args=[self.expression_store.store(value),
+                      ast.Name(ctx=ast.Load(), id='_namespace')],
+                keywords=[]), value)
+            ast.fix_missing_locations(statement)
+            return statement
+        elif (isinstance(value, ast.Call) and
+              hasattr(value.func, 'id') and
+              value.func.id in self.constructors):
+            value.args = [ self.expression_store.store(arg)
+                           for arg in value.args]
+            return value
+        else:
+            return self.expression_store.store(value)
 
     def process_backlog(self, g, l, path):
         if not self.backlog.body:
@@ -94,7 +114,8 @@ class ExpressionStore(object):
         self.id = id
 
     def store(self, value):
-        if type(value) in (ast.Str, ast.Num, ast.List, ast.NameConstant):
+        if type(value) in (ast.Str, ast.Num, ast.List, ast.Dict,
+                           ast.NameConstant):
             return value
         expr = Expression(value)
         self.expressions.append(expr)

@@ -1,0 +1,17 @@
+FILES = {}
+FILES['package-foo'] = ['%s/foo'%(bindir), '%s/foo'%(libdir)]
+FILES['package-bar'] = ['%s/bar'%(bindir)]
+FILES_HELLO = ['%s/hello'%(bindir)]
+FILES.update_if(HELLO, {'package-hello': FILES_HELLO})
+HELLO = True
+FILES.update_if(WORLD, {'package-world': ['%s/world'%(bindir)]})
+WORLD = True
+FILES['package-bar'].prepend("{0}/libbar.so".format(libdir))
+bindir = '/usr/bin'
+libdir = '/usr/lib'
+
+PKG = {}
+PKG['foo'] = {}
+PKG['foo']['DEPENDS'] = ['make', 'autoconf']
+PKG['foo']['FILES'] = List(FILES['package-foo'])
+
