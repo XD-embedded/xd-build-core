@@ -7,6 +7,7 @@ from .recipe_version import *
 from .data.parser import *
 import os
 import sys
+import pprint
 
 
 __all__ = ['RecipeFile', 'InvalidRecipeName', 'InvalidRecipeFilename']
@@ -97,4 +98,4 @@ class RecipeFile(object):
         if stream is None:
             stream = sys.stdout
         for name, value in sorted(self.data.items()):
-            print("%s=%r"%(name, value.get()), file=stream)
+            print("%s=%s"%(name, pprint.pformat(value.get())), file=stream)
