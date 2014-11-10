@@ -97,3 +97,13 @@ class tests(unittest.case.TestCase):
         s.append('bar')
         s.set('hello')
         self.assertEqual(s.get(), 'hello')
+
+    def test_anonymous_assign(self):
+        s = String('foo')
+        with self.assertRaises(TypeError):
+            s.set(String('bar'))
+
+    def test_anonymous_condition(self):
+        s = String('foo')
+        with self.assertRaises(TypeError):
+            s.set_if(String('bar'), 'hello world')

@@ -425,8 +425,17 @@ FOO['bar'] = 43
             f.write('''D={}
 D['foo'] = FOO
 ''')
-        with self.assertRaises(TypeError):
-            d = self.parser.parse('recipe.xd')
+        d = self.parser.parse('recipe.xd')
+        self.assertRaises(NameError, d['D']['foo'].get)
+
+    def test_dict_setitem_5(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''D={}
+D['foo'] = FOO
+FOO = 'bar'
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(d['D'].get()['foo'], 'bar')
 
     def test_dict_getitem_keyerror_1(self):
         with open('recipe.xd', 'w') as f:
@@ -513,3 +522,26 @@ FILES['foo'].append('%s/bar.so'%(libdir))
         self.assertEqual(d['libdir'].get(), '/usr/lib')
         self.assertEqual(d['FILES'].get(), {'foo': ['/usr/lib/foo.so',
                                                     '/usr/lib/bar.so']})
+
+    def test_dict_strmod_key(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''PKG={}
+RECIPE_NAME='foo'
+PKG['%s-dev'%(RECIPE_NAME,)] = ['/foobar']
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['RECIPE_NAME'].get(), 'foo')
+        self.assertEqual(d['PKG'].get(), {'foo-dev': ['/foobar']})
+
+    def test_dict_strformat_key(self):
+        with open('recipe.xd', 'w') as f:
+            f.write('''PKG={}
+RECIPE_NAME='foo'
+PKG['{0}-dev'.format(RECIPE_NAME)] = ['/foobar']
+''')
+        d = self.parser.parse('recipe.xd')
+        self.assertEqual(len(d), 2)
+        self.assertEqual(d['RECIPE_NAME'].get(), 'foo')
+        self.assertEqual(d['PKG'].get(), {'foo-dev': ['/foobar']})
+

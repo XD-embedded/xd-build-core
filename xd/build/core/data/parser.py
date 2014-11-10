@@ -28,8 +28,8 @@ class Parser(object):
         self.backlog.body = []
 
     def parse(self, path):
-        self.expression_store = ExpressionStore('_expr')
         self.namespace = Namespace()
+        self.expression_store = ExpressionStore('_expr', self.namespace)
         self.globals = {
             '_expr': self.expression_store.expressions,
             '_namespace': self.namespace
@@ -46,6 +46,16 @@ class Parser(object):
     def parse_statement(self, statement):
         if isinstance(statement, ast.Assign):
             statement.value = self.parse_value(statement.value)
+            for i in range(len(statement.targets)):
+                if isinstance(statement.targets[i], ast.Subscript):
+                    subscript = self.expression_store.store(
+                        statement.targets[i].slice.value)
+                    if isinstance(subscript, ast.Subscript):
+                        statement.targets[i].slice.value = ast.Call(
+                            func=ast.Attribute(
+                                ctx=ast.Load(), value=subscript, attr='get'),
+                            args=[], keywords=[])
+                        ast.fix_missing_locations(statement.targets[i])
             self.backlog.body.append(statement)
         elif isinstance(statement, ast.Expr):
             assert isinstance(statement.value, ast.Call)
@@ -73,24 +83,12 @@ class Parser(object):
               isinstance(value, ast.BinOp) and
               isinstance(value.left, ast.Str) and
               isinstance(value.op, ast.Mod)):
-            statement = ast.copy_location(ast.Call(
-                func=ast.Name(ctx=ast.Load(), id='String'),
-                args=[self.expression_store.store(value),
-                      ast.Name(ctx=ast.Load(), id='_namespace')],
-                keywords=[]), value)
-            ast.fix_missing_locations(statement)
-            return statement
+            return self.expression_store.store(value, String)
         elif (strwrap and
               isinstance(value, ast.Call) and
               isinstance(value.func, ast.Attribute) and
               isinstance(value.func.value, ast.Str)):
-            statement = ast.copy_location(ast.Call(
-                func=ast.Name(ctx=ast.Load(), id='String'),
-                args=[self.expression_store.store(value),
-                      ast.Name(ctx=ast.Load(), id='_namespace')],
-                keywords=[]), value)
-            ast.fix_missing_locations(statement)
-            return statement
+            return self.expression_store.store(value, String)
         elif (isinstance(value, ast.Call) and
               hasattr(value.func, 'id') and
               value.func.id in self.constructors):
@@ -109,15 +107,16 @@ class Parser(object):
 
 class ExpressionStore(object):
 
-    def __init__(self, id):
+    def __init__(self, id, scope):
         self.expressions = []
         self.id = id
+        self.scope = scope
 
-    def store(self, value):
+    def store(self, value, constructor=None):
         if type(value) in (ast.Str, ast.Num, ast.List, ast.Dict,
                            ast.NameConstant):
             return value
-        expr = Expression(value)
+        expr = Expression(value, self.scope, constructor)
         self.expressions.append(expr)
         ref = ast.Subscript()
         ref.ctx = ast.Load()
