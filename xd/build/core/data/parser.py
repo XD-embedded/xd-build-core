@@ -45,30 +45,36 @@ class Parser(object):
 
     def parse_statement(self, statement):
         if isinstance(statement, ast.Assign):
-            statement.value = self.parse_value(statement.value)
-            for i in range(len(statement.targets)):
-                if isinstance(statement.targets[i], ast.Subscript):
-                    subscript = self.expression_store.store(
-                        statement.targets[i].slice.value)
-                    if isinstance(subscript, ast.Subscript):
-                        statement.targets[i].slice.value = ast.Call(
-                            func=ast.Attribute(
-                                ctx=ast.Load(), value=subscript, attr='get'),
-                            args=[], keywords=[])
-                        ast.fix_missing_locations(statement.targets[i])
-            self.backlog.body.append(statement)
+            self.parse_assignment(statement)
         elif isinstance(statement, ast.Expr):
-            assert isinstance(statement.value, ast.Call)
-            statement.value.args = [
-                self.parse_value(arg, strwrap=False)
-                for arg in statement.value.args]
-            for i in range(len(statement.value.keywords)):
-                keyword = statement.value.keywords[i]
-                keyword.value = self.expression_store.store(keyword.value)
-            self.backlog.body.append(statement)
+            self.parse_expression(statement)
         else:
             raise SyntaxError('unsupported statement: %s'%(
                 statement.__class__.__name__))
+
+    def parse_assignment(self, statement):
+        statement.value = self.parse_value(statement.value)
+        for i in range(len(statement.targets)):
+            if isinstance(statement.targets[i], ast.Subscript):
+                subscript = self.expression_store.store(
+                    statement.targets[i].slice.value)
+                if isinstance(subscript, ast.Subscript):
+                    statement.targets[i].slice.value = ast.Call(
+                        func=ast.Attribute(
+                            ctx=ast.Load(), value=subscript, attr='get'),
+                        args=[], keywords=[])
+                    ast.fix_missing_locations(statement.targets[i])
+        self.backlog.body.append(statement)
+
+    def parse_expression(self, statement):
+        assert isinstance(statement.value, ast.Call)
+        statement.value.args = [
+            self.parse_value(arg, strwrap=False)
+            for arg in statement.value.args]
+        for i in range(len(statement.value.keywords)):
+            keyword = statement.value.keywords[i]
+            keyword.value = self.expression_store.store(keyword.value)
+        self.backlog.body.append(statement)
 
     def parse_value(self, value, strwrap=True):
         if type(value) in (ast.Str, ast.Num, ast.NameConstant):
