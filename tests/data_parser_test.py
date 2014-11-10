@@ -381,7 +381,7 @@ FOO.update_if(BAR, {'bar': 43})
         self.assertEqual(len(d), 1)
         self.assertEqual(d['FOO'].get(), {'foo': 42})
 
-    def test_dict_update_if_1(self):
+    def test_dict_update_if_2(self):
         with open('recipe.xd', 'w') as f:
             f.write('''FOO={'foo': 42}
 FOO.update_if(BAR, {'bar': 43})
@@ -544,4 +544,3 @@ PKG['{0}-dev'.format(RECIPE_NAME)] = ['/foobar']
         self.assertEqual(len(d), 2)
         self.assertEqual(d['RECIPE_NAME'].get(), 'foo')
         self.assertEqual(d['PKG'].get(), {'foo-dev': ['/foobar']})
-
