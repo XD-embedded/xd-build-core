@@ -24,14 +24,20 @@ class Sequence(Variable):
         self.amends = []
 
     def prepend(self, value):
-        value = self.canonicalize(value)
-        self.validate_value(value)
-        self.amends.append((self.amend_prepend, value))
+        self.amends.append((self.amend_prepend, self.prepare_value(value)))
 
     def append(self, value):
-        value = self.canonicalize(value)
-        self.validate_value(value)
-        self.amends.append((self.amend_append, value))
+        self.amends.append((self.amend_append, self.prepare_value(value)))
+
+    def prepend_if(self, condition, value):
+        self.amend_ifs.append((self.prepare_condition(condition),
+                               self.amend_prepend,
+                               self.prepare_value(value)))
+
+    def append_if(self, condition, value):
+        self.amend_ifs.append((self.prepare_condition(condition),
+                               self.amend_append,
+                               self.prepare_value(value)))
 
     def amend_prepend(self, value, amend_value):
         self.validate_value(amend_value)
@@ -40,17 +46,3 @@ class Sequence(Variable):
     def amend_append(self, value, amend_value):
         self.validate_value(amend_value)
         return value + amend_value
-
-    def prepend_if(self, condition, value):
-        condition = self.canonicalize(condition)
-        assert isinstance(condition, Expression)
-        value = self.canonicalize(value)
-        self.validate_value(value)
-        self.amend_ifs.append((condition, self.amend_prepend, value))
-
-    def append_if(self, condition, value):
-        condition = self.canonicalize(condition)
-        assert isinstance(condition, Expression)
-        value = self.canonicalize(value)
-        self.validate_value(value)
-        self.amend_ifs.append((condition, self.amend_append, value))

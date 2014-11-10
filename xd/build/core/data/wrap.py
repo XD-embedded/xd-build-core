@@ -3,6 +3,9 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
+from .expr import Expression
+
+
 __all__ = ['wrap']
 
 
@@ -15,10 +18,12 @@ def wrap(var):
         var = Int(var)
     elif isinstance(var, float):
         var = Float(var)
-    elif isinstance(var, list):
+    elif type(var) == list:
         var = List(var)
-    elif isinstance(var, dict):
+    elif type(var) == dict:
         var = Dict(var)
+    elif isinstance(var, Expression) and var.constructor:
+        var = var.constructor(var)
     return var
 
 

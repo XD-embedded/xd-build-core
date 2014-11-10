@@ -171,8 +171,9 @@ class tests(unittest.case.TestCase):
 
     def test_expr_as_init(self):
         FOO = self.ns['FOO'] = 'foo'
-        with self.assertRaises(TypeError):
-            self.ns['BAR'] = Expression('BAR')
+        self.ns['BAR'] = Expression('FOO')
+        self.assertEqual(self.ns['FOO'].get(), 'foo')
+        self.assertEqual(self.ns['BAR'].get(), 'foo')
 
     def test_init_with_unsupported(self):
         with self.assertRaises(TypeError):
@@ -590,3 +591,40 @@ class tests(unittest.case.TestCase):
         self.ns['FOO'] = True
         self.assertIsInstance(self.ns['D']['i'], Dict)
         self.assertEqual(self.ns['D']['i'].get(), {'foo': 43})
+
+    def test_dict_item_implicit_expr_1(self):
+        self.ns['D'] = {}
+        self.ns['d'] = {'foo': 42}
+        self.ns['D']['i'] = self.ns['d']
+        self.ns['d']['foo'] = 43
+        self.assertEqual(self.ns['D'].get()['i'], {'foo': 43})
+
+    def test_dict_item_bad(self):
+        self.ns['D'] = {}
+        with self.assertRaises(TypeError):
+            self.ns['D']['i'] = self.ns
+
+    def test_nested_scope_1(self):
+        D = Dict({'foo': Dict({'bar': 'baah'})})
+        D['foo'].set_if(Expression('BAR'),
+                        {'bar': String(Expression('hello'))})
+        self.ns['D'] = D
+        self.ns['hello'] = 'booh'
+        self.assertEqual(self.ns['D'].get()['foo']['bar'], 'baah')
+        self.ns['BAR'] = True
+        self.assertEqual(self.ns['D'].get()['foo']['bar'], 'booh')
+
+    def test_nested_scope_2(self):
+        D = Dict({'foo': Dict({'bar': 42})})
+        D['foo'].update({'bar': 43})
+        self.ns['D'] = D
+        self.assertEqual(self.ns['D'].get()['foo']['bar'], 43)
+
+    def test_nested_scope_3(self):
+        D = Dict({'foo': Dict({'bar': 42})})
+        D['foo'].update_if(Expression('BAR'),
+                           {'bar': Float(Expression('pi'))})
+        self.ns['D'] = D
+        self.ns['BAR'] = True
+        self.ns['pi'] = 3.14
+        self.assertEqual(self.ns['D'].get()['foo']['bar'], 3.14)

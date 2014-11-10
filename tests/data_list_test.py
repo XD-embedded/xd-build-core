@@ -170,4 +170,14 @@ class tests(unittest.case.TestCase):
         self.assertEqual(s.get(), [1,2,3,4])
         self.assertEqual(s.get(), [1,2,3,4])
 
+    def test_anonymous_item_append(self):
+        from xd.build.core.data.string import String
+        s = List([1,2])
+        with self.assertRaises(TypeError):
+            s.append(String('foo'))
 
+    def test_anonymous_item_prepend(self):
+        from xd.build.core.data.string import String
+        s = List([1,2])
+        with self.assertRaises(TypeError):
+            s.prepend(String('foo'))

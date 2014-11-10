@@ -40,17 +40,18 @@ class Namespace(dict):
             self[key].set(value)
             return
         value = wrap(value)
-        if isinstance(value, Expression):
-            raise TypeError(
-                'cannot assign Expression to untyped Variable %s'%(key))
-        elif not isinstance(value, Variable):
+        if isinstance(value, Variable):
+            old_name = getattr(value, 'name', None)
+            if old_name is not None and old_name != key:
+                raise MultiBinding('rename of Variable %s to %s not allowed'%(
+                    value.name, key))
+            value.name = key
+        elif isinstance(value, Expression):
+            pass
+        else:
             raise TypeError('unsupported type for Variable %s: %s'%(
                 key, type(value)))
-        if getattr(value, 'name', None):
-            raise MultiBinding('rename of Variable %s to %s not allowed'%(
-                value.name, key))
-        value.scope = self
-        value.name = key
+        value.set_scope(self)
         super(Namespace, self).__setitem__(key, value)
 
     def __delitem__(self, key):

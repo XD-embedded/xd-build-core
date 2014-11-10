@@ -14,24 +14,22 @@ class Variable(object):
     __slots__ = ['scope', 'name', 'value', 'set_ifs']
 
     def __init__(self, value=None, scope=None):
-        value = self.canonicalize(value)
-        self.validate_value(value)
-        self.value = value
         self.scope = scope
+        self.value = self.prepare_value(value)
         self.set_ifs = []
 
     def __str__(self):
         return "%s(%s)"%(self.__class__.__name__,
                          getattr(self, 'name', ''))
 
+    def set_scope(self, scope):
+        self.scope = scope
+
     def set(self, value):
-        value = self.canonicalize(value)
-        self.validate_value(value)
-        self.value = value
+        self.value = self.prepare_value(value)
 
     def get(self):
-        value = self.eval(self.value)
-        self.validate_value(value)
+        value = self.eval(self.value, self.validate_value)
         if hasattr(self, 'amends'):
             value = self.amend(value)
         value = self.override(value)
@@ -40,18 +38,13 @@ class Variable(object):
         return value
 
     def set_if(self, condition, value):
-        condition = self.canonicalize(condition)
-        assert isinstance(condition, Expression)
-        value = self.canonicalize(value)
-        self.validate_value(value)
-        self.set_ifs.append((condition, value))
+        self.set_ifs.append((self.prepare_condition(condition),
+                             self.prepare_value(value)))
 
     def override(self, value):
         for (condition, override_value) in reversed(self.set_ifs):
             if self.eval_condition(condition):
-                value = self.eval(override_value)
-                self.validate_value(value)
-                return value
+                return self.eval(override_value, self.validate_value)
         return value
 
     def amend(self, value):
@@ -71,37 +64,74 @@ class Variable(object):
         if amend_value is None:
             return value
         if value is None:
-            try:
-                value = self.empty.copy()
-            except AttributeError:
-                value = self.empty
+            value = self.empty
+        try:
+            value = value.copy()
+        except AttributeError:
+            pass
         return amend_func(value, amend_value)
 
+    def eval(self, value, validate=None):
+        if isinstance(value, Expression):
+            assert self.scope is not None
+            value = self.scope.eval(value)
+        if validate:
+            validate(value)
+        return value
+
+    def prepare_value(self, value):
+        """Prepare value for use as Variable stored value.
+
+        Check validity of value for use as a stored value for Variable, and
+        make necessary adjustments for its use as such.
+        """
+        if isinstance(value, Variable):
+            try:
+                name = value.name
+            except AttributeError:
+                raise TypeError('cannot use anonymous %s as %s value'%(
+                    value.__class__.__name__, self.__class__.__name__))
+            value = Expression(name)
+        if isinstance(value, Expression):
+            value.set_scope(self.scope)
+        if not type(value) in (type(None), self.basetype, Expression):
+            raise TypeError('invalid type for %s variable <%s>: %s'%(
+                self.__class__.__name__, getattr(self, 'name', ''),
+                value.__class__.__name__))
+        return value
+
     def validate_value(self, value):
-        if not (value is None or type(value) in (self.basetype, Expression)):
+        """Validate Variable value.
+
+        Check validity of value as proper Variable value..
+        """
+        if not type(value) in (type(None), self.basetype):
             raise TypeError('invalid type for %s variable <%s>: %s'%(
                 self.__class__.__name__, getattr(self, 'name', ''),
                 value.__class__.__name__))
 
-    def eval(self, value):
-        if isinstance(value, Expression):
-            value = self.scope.eval(value)
-        return value
+    def eval_condition(self, condition):
+        if isinstance(condition, Expression):
+            assert self.scope is not None
+            try:
+                condition = self.scope.eval(condition)
+            except NameError:
+                return False
+        return bool(condition)
 
-    def eval_condition(self, value):
-        try:
-            return bool(self.scope.eval(value))
-        except NameError:
-            return False
+    def prepare_condition(self, value):
+        """Prepare value for use as Variable condition value.
 
-    def canonicalize(self, value):
+        Check validity of value for use as a condition value for Variable, and
+        make necessary adjustments for its use as such.
+        """
         if isinstance(value, Variable):
-            value = value.expression()
+            try:
+                name = value.name
+            except AttributeError:
+                raise TypeError('cannot use anonymous %s as %s condition'%(
+                    value.__class__.__name__, self.__class__.__name__))
+            value = Expression(name)
+        if isinstance(value, Expression):
+            value.set_scope(self.scope)
         return value
-
-    def expression(self):
-        try:
-            name = self.name
-        except AttributeError:
-            return self.get()
-        return Expression(self.name)

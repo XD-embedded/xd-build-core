@@ -4,7 +4,6 @@ log.setLevel(logging.INFO)
 
 
 import ast
-import types
 
 
 __all__ = ['Expression']
@@ -12,7 +11,9 @@ __all__ = ['Expression']
 
 class Expression(object):
 
-    def __init__(self, expr):
+    def __init__(self, expr, scope=None, constructor=None):
+        self.scope = scope
+        self.constructor = constructor
         if isinstance(expr, ast.expr):
             e = ast.Expression()
             ast.copy_location(e, expr)
@@ -26,3 +27,9 @@ class Expression(object):
             self.code = compile(expr, '<>', 'eval')
         else:
             raise TypeError('invalid expr type: %s'%(type(expr)))
+
+    def set_scope(self, scope):
+        self.scope = scope
+
+    def get(self):
+        return self.scope.eval(self)
