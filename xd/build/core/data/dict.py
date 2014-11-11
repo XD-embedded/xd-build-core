@@ -24,8 +24,7 @@ class Dict(Variable):
         if value is None:
             super(Dict, self).__init__(None, scope)
             return
-        super(Dict, self).__init__({}, scope)
-        self.set(value)
+        super(Dict, self).__init__(value, scope)
 
     def set_scope(self, scope):
         if self.value:

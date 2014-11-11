@@ -15,7 +15,7 @@ class Variable(object):
 
     def __init__(self, value=None, scope=None):
         self.scope = scope
-        self.value = self.prepare_value(value)
+        self.set(value)
         self.set_ifs = []
 
     def __str__(self):
