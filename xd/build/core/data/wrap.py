@@ -4,6 +4,7 @@ log.setLevel(logging.INFO)
 
 
 from .expr import Expression
+import types
 
 
 __all__ = ['wrap']
@@ -22,6 +23,8 @@ def wrap(var):
         var = List(var)
     elif type(var) == dict:
         var = Dict(var)
+    elif type(var) == types.FunctionType:
+        var = Function(var)
     elif isinstance(var, Expression) and var.constructor:
         var = var.constructor(var)
     return var
@@ -32,3 +35,4 @@ from .string import *
 from .num import *
 from .list import *
 from .dict import *
+from .func import *
