@@ -3,6 +3,7 @@ from xd.build.core.data.expr import Expression
 from xd.build.core.data.string import String
 from xd.build.core.data.list import List
 from xd.build.core.data.dict import Dict
+from xd.build.core.data.func import Function
 from xd.build.core.data.num import *
 
 import unittest
@@ -523,6 +524,15 @@ class tests(unittest.case.TestCase):
         self.ns['L'].extend_if(Expression('BAR'), ['hello', 'world'])
         self.assertEqual(self.ns['L'].get(), ['foo', 'bar'])
 
+    def test_list_item_invalid(self):
+        self.ns['l'] = []
+        def foo():
+            return 42
+        self.ns['f'] = Function(foo)
+        self.ns['l'].append(Expression('f'))
+        with self.assertRaises(TypeError):
+            self.ns['l'].get()
+
     def test_dict_update_if_1(self):
         self.ns['D'] = {'foo': 42}
         self.ns['BAR'] = True
@@ -603,6 +613,15 @@ class tests(unittest.case.TestCase):
         self.ns['D'] = {}
         with self.assertRaises(TypeError):
             self.ns['D']['i'] = self.ns
+
+    def test_dict_item_invalid(self):
+        self.ns['D'] = {}
+        def foo():
+            return 42
+        self.ns['f'] = Function(foo)
+        self.ns['D']['i'] = Expression('f')
+        with self.assertRaises(TypeError):
+            self.ns['D'].get()
 
     def test_nested_scope_1(self):
         D = Dict({'foo': Dict({'bar': 'baah'})})

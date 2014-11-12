@@ -1,0 +1,3 @@
+def foo(d):
+    print("foobar")
+    return 42+d

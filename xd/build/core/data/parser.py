@@ -45,30 +45,49 @@ class Parser(object):
 
     def parse_statement(self, statement):
         if isinstance(statement, ast.Assign):
-            statement.value = self.parse_value(statement.value)
-            for i in range(len(statement.targets)):
-                if isinstance(statement.targets[i], ast.Subscript):
-                    subscript = self.expression_store.store(
-                        statement.targets[i].slice.value)
-                    if isinstance(subscript, ast.Subscript):
-                        statement.targets[i].slice.value = ast.Call(
-                            func=ast.Attribute(
-                                ctx=ast.Load(), value=subscript, attr='get'),
-                            args=[], keywords=[])
-                        ast.fix_missing_locations(statement.targets[i])
-            self.backlog.body.append(statement)
+            self.parse_assignment(statement)
         elif isinstance(statement, ast.Expr):
-            assert isinstance(statement.value, ast.Call)
-            statement.value.args = [
-                self.parse_value(arg, strwrap=False)
-                for arg in statement.value.args]
-            for i in range(len(statement.value.keywords)):
-                keyword = statement.value.keywords[i]
-                keyword.value = self.expression_store.store(keyword.value)
-            self.backlog.body.append(statement)
+            self.parse_expression(statement)
+        elif isinstance(statement, ast.FunctionDef):
+            self.parse_functiondef(statement)
         else:
             raise SyntaxError('unsupported statement: %s'%(
                 statement.__class__.__name__))
+
+    def parse_assignment(self, statement):
+        statement.value = self.parse_value(statement.value)
+        for i in range(len(statement.targets)):
+            if isinstance(statement.targets[i], ast.Subscript):
+                subscript = self.expression_store.store(
+                    statement.targets[i].slice.value)
+                if isinstance(subscript, ast.Subscript):
+                    statement.targets[i].slice.value = ast.Call(
+                        func=ast.Attribute(
+                            ctx=ast.Load(), value=subscript, attr='get'),
+                        args=[], keywords=[])
+                    ast.fix_missing_locations(statement.targets[i])
+        self.backlog.body.append(statement)
+
+    def parse_expression(self, statement):
+        assert isinstance(statement.value, ast.Call)
+        statement.value.args = [
+            self.parse_value(arg, strwrap=False)
+            for arg in statement.value.args]
+        for i in range(len(statement.value.keywords)):
+            keyword = statement.value.keywords[i]
+            keyword.value = self.expression_store.store(keyword.value)
+        self.backlog.body.append(statement)
+
+    def parse_functiondef(self, statement):
+        self.backlog.body.append(statement)
+        set_source_statement = ast.copy_location(ast.Expr(ast.Call(
+            func=ast.Attribute(
+                value=ast.Name(id=statement.name, ctx=ast.Load()),
+                attr='set_source', ctx=ast.Load()),
+            args=[self.expression_store.store(statement)],
+            keywords=[])), statement)
+        ast.fix_missing_locations(set_source_statement)
+        self.backlog.body.append(set_source_statement)
 
     def parse_value(self, value, strwrap=True):
         if type(value) in (ast.Str, ast.Num, ast.NameConstant):
@@ -116,7 +135,10 @@ class ExpressionStore(object):
         if type(value) in (ast.Str, ast.Num, ast.List, ast.Dict,
                            ast.NameConstant):
             return value
-        expr = Expression(value, self.scope, constructor)
+        if isinstance(value, ast.FunctionDef):
+            expr = value
+        else:
+            expr = Expression(value, self.scope, constructor)
         self.expressions.append(expr)
         ref = ast.Subscript()
         ref.ctx = ast.Load()
